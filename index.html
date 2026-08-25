@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <title>📺 IPTV Tester — เลือกแอปเองได้</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=5.0,user-scalable=yes">
+  <title>📺 IPTV Tester — ครบทุกฟอร์แมต</title>
   
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.21/dist/hls.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/dashjs@4.7.4/dist/dash.all.min.js"></script>
@@ -18,15 +18,26 @@
       --blue: #2563eb;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
-    body { background: var(--bg); color: var(--t1); min-height: 100vh; padding: 16px; }
+    body { background: var(--bg); color: var(--t1); min-height: 100vh; padding: 16px; padding-top: 60px; }
+
+    /* ===== ↩️ ปุ่มย้อนกลับ ===== */
+    .back-btn {
+      position: fixed; top: 12px; left: 12px; z-index: 1000;
+      background: var(--accent); color: #fff; border: none;
+      padding: 8px 16px; border-radius: 8px; font-size: 14px; font-weight: 600;
+      cursor: pointer; display: flex; align-items: center; gap: 6px;
+      box-shadow: 0 2px 10px rgba(0,200,255,0.3); transition: 0.2s;
+    }
+    .back-btn:hover { transform: scale(1.05); }
+    .back-btn.hidden { display: none; }
 
     .container { max-width: 600px; margin: 0 auto; }
     h1 { text-align: center; margin-bottom: 20px; color: var(--accent); font-size: 20px; }
 
     /* ===== 🎬 เครื่องเล่น ===== */
     .video-box { background: #000; border-radius: 12px; overflow: hidden; margin-bottom: 16px; box-shadow: 0 4px 24px rgba(0,0,0,0.5); display: none; }
-    .video-wrap { width: 100%; aspect-ratio: 16/9; background: #000; position: relative; overflow: hidden; transition: all 0.3s ease; }
-    video, iframe { width: 100%; height: 100%; display: block; border: none; transition: object-fit 0.3s ease; }
+    .video-wrap { width: 100%; aspect-ratio: 16/9; background: #000; position: relative; overflow: hidden; }
+    video, iframe { width: 100%; height: 100%; display: block; border: none; }
     video { object-fit: contain; }
     .web-view { width: 100%; height: 100%; border: none; }
 
@@ -94,6 +105,16 @@
     }
     .paste-btn:hover { background: #6b21d8; }
 
+    /* ===== ปุ่มโหลดไฟล์ ===== */
+    .file-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+    .file-btn {
+      flex: 1; min-width: 140px; padding: 12px; border-radius: 8px; border: none;
+      background: linear-gradient(135deg, #10b981, #059669); color: #fff;
+      font-size: 14px; font-weight: 600; cursor: pointer; transition: 0.2s;
+    }
+    .file-btn:hover { transform: translateY(-2px); }
+    input[type="file"] { display: none; }
+
     /* ===== ปุ่มทดสอบเล่น ===== */
     .play-btn {
       width: 100%; padding: 14px; border-radius: 10px; border: none;
@@ -129,7 +150,7 @@
     }
     .category-all { background: linear-gradient(135deg, var(--accent), var(--accent2)); border: none; color: #fff; }
 
-    /* ===== 📋 รายการช่องจาก M3U ===== */
+    /* ===== 📋 รายการช่อง — ไม่หายเมื่อกดเล่น! ===== */
     .playlist-box { background: var(--s1); border-radius: 12px; padding: 16px; border: 1px solid var(--b1); margin-top: 16px; display: none; }
     .playlist-box.show { display: block; }
     .playlist-title { font-size: 16px; font-weight: 600; margin-bottom: 8px; color: var(--accent); }
@@ -150,13 +171,12 @@
     }
     .ext-btn:hover { transform: translateY(-2px); }
     .ext-open { background: linear-gradient(135deg, #f97316, #ea580c); }
-    .ext-share { background: linear-gradient(135deg, #8b5cf6, #6366f1); }
     .ext-copy { background: linear-gradient(135deg, #10b981, #059669); }
     .ext-copy.copied { background: #4ade80; color: #000; }
 
     /* ===== มือถือ ===== */
     @media (max-width: 480px) {
-      body { padding: 12px; }
+      body { padding: 12px; padding-top: 55px; }
       .type-btn { padding: 7px 10px; font-size: 12px; }
       .mode-btn { min-width: 65px; padding: 7px 4px; font-size: 11px; }
       .ext-bar { grid-template-columns: 1fr 1fr; }
@@ -165,19 +185,22 @@
 </head>
 <body>
 
+  <!-- ↩️ ปุ่มย้อนกลับ -->
+  <button class="back-btn hidden" id="backBtn">← กลับ</button>
+
 <div class="container">
-  <h1>📺 IPTV Tester — เลือกแอปเองได้</h1>
+  <h1>📺 IPTV Tester — รองรับ M3U / JSON / W3U</h1>
 
   <!-- ===== 🎬 เครื่องเล่น ===== -->
   <div class="video-box" id="videoBox">
     <div class="video-wrap" id="videoWrap">
-      <video id="video" controls playsinline preload="metadata" style="display: none;"></video>
+      <video id="video" controls="" playsinline="" preload="metadata" style="display: none;"></video>
       <iframe id="webIframe" class="web-view" style="display: none;" allow="autoplay; fullscreen; picture-in-picture"></iframe>
     </div>
 
-    <!-- 📐 ปรับขนาดหน้าจอ / โหมดภาพ -->
+    <!-- 📐 ปรับขนาดหน้าจอ -->
     <div class="mode-bar">
-      <span class="mode-label">📐 โหมดแสดงภาพ — กำจัดขอบดำ</span>
+      <span class="mode-label">📐 โหมดแสดงภาพ</span>
       <button class="mode-btn active" data-mode="contain">⚙ Contain</button>
       <button class="mode-btn" data-mode="cover">🔍 Cover</button>
       <button class="mode-btn" data-mode="fill">↔️ Stretch</button>
@@ -188,14 +211,14 @@
 
   <!-- ===== 📋 ฟอร์ม ===== -->
   <div class="form-card">
-    <!-- แท็บ: เล่นตรง / M3U Playlist -->
+    <!-- แท็บ: เล่นตรง / โหลดเพลย์ลิสต์ -->
     <div class="tabs">
-      <div class="tab active" data-tab="direct">▶ เล่นตรง</div>
-      <div class="tab" data-tab="m3u">📋 M3U Playlist</div>
+      <div class="tab" data-tab="direct">▶ เล่นตรง</div>
+      <div class="tab active" data-tab="playlist">📋 เพลย์ลิสต์</div>
     </div>
 
     <!-- ===== แท็บ 1: เล่นตรง ===== -->
-    <div class="tab-content active" id="tab-direct">
+    <div class="tab-content" id="tab-direct">
       <div class="section-title">เลือกประเภทลิงก์ (Type)</div>
       <div class="type-bar">
         <button class="type-btn" data-type="play">play</button>
@@ -221,27 +244,25 @@
         </div>
       </div>
 
-      <div class="input-group">
-        <label class="label">User-Agent (ใส่อัตโนมัติได้)</label>
-        <div class="input-wrap">
-          <input type="text" class="input-field" id="uaInput" placeholder="Mozilla/5.0 ...">
-          <button class="paste-btn" id="pasteUaBtn">วาง</button>
-        </div>
-      </div>
-
       <button class="play-btn" id="testBtn">
         <span>▶</span> ทดสอบเล่น
       </button>
     </div>
 
-    <!-- ===== แท็บ 2: M3U Playlist ===== -->
-    <div class="tab-content" id="tab-m3u">
-      <div class="section-title">📋 โหลดเพลย์ลิสต์ .m3u / .m3u8</div>
+    <!-- ===== แท็บ 2: โหลดเพลย์ลิสต์ — รองรับ .m3u / .json / .w3u ===== -->
+    <div class="tab-content active" id="tab-playlist">
+      <div class="section-title">📂 โหลดเพลย์ลิสต์ — รองรับ .m3u / .json / .w3u</div>
       
+      <!-- อัปโหลดไฟล์ -->
+      <div class="file-row">
+        <button class="file-btn" id="selectFileBtn">📂 เลือกไฟล์ในเครื่อง</button>
+        <input type="file" id="fileInput" accept=".m3u,.m3u8,.json,.w3u">
+      </div>
+
+      <div class="section-title" style="margin-top: 16px;">🔗 หรือใส่ลิงก์ไฟล์</div>
       <div class="input-group">
-        <label class="label">🔗 ลิงก์ไฟล์ .m3u / .m3u8</label>
         <div class="input-wrap">
-          <input type="text" class="input-field" id="m3uUrlInput" placeholder="https://example.com/playlist.m3u">
+          <input type="text" class="input-field" id="m3uUrlInput" placeholder="https://example.com/playlist.m3u / .json / .w3u">
           <button class="paste-btn" id="pasteM3uBtn">วาง</button>
         </div>
       </div>
@@ -254,14 +275,14 @@
     <!-- สถานะ -->
     <div class="status" id="status"></div>
 
-    <!-- ปุ่มเปิดภายนอก — ใช้ระบบเลือกแอปเอง -->
+    <!-- ปุ่มเปิดภายนอก -->
     <div class="ext-bar" id="extBar" style="display: none;">
       <button class="ext-btn ext-open" id="openInAppBtn">📱 เปิดในแอปอื่น</button>
       <button class="ext-btn ext-copy" id="copyBtn">📋 คัดลอก</button>
     </div>
   </div>
 
-  <!-- ===== 📋 รายการช่องจาก M3U ===== -->
+  <!-- ===== 📋 รายการช่อง — ไม่หายเมื่อกดเล่น! ===== -->
   <div class="playlist-box" id="playlistBox">
     <div class="playlist-title">📋 รายการช่อง <span id="chCount"></span></div>
     
@@ -281,8 +302,7 @@
 const video = document.getElementById('video');
 const webIframe = document.getElementById('webIframe');
 const videoBox = document.getElementById('videoBox');
-const videoWrap = document.getElementById('videoWrap');
-const extBar = document.getElementById('extBar');
+const backBtn = document.getElementById('backBtn');
 const status = document.getElementById('status');
 const playlistBox = document.getElementById('playlistBox');
 const categoryBar = document.getElementById('categoryBar');
@@ -291,14 +311,30 @@ const channelsList = document.getElementById('channelsList');
 let hls = null, dashPlayer = null;
 let currentType = 'web_url';
 let currentUrl = '';
-let currentReferer = '';
 let allChannels = [];
 let categories = [];
 let activeCategory = 'all';
 let playingIndex = -1;
 
 // ==============================================
-// 📱 สลับแท็บ เล่นตรง / M3U
+// ↩️ ปุ่มย้อนกลับ — กลับไปหน้าแรก
+// ==============================================
+backBtn.addEventListener('click', () => {
+  stopAll();
+  videoBox.style.display = 'none';
+  playlistBox.classList.remove('show');
+  backBtn.classList.add('hidden');
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelector('[data-tab="playlist"]').classList.add('active');
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.getElementById('tab-playlist').classList.add('active');
+  allChannels = [];
+  channelsList.innerHTML = '';
+  showStatus('✅ กลับไปหน้าแรกแล้ว', 'ok');
+});
+
+// ==============================================
+// 📱 สลับแท็บ
 // ==============================================
 document.querySelectorAll('.tab').forEach(tab => {
   tab.addEventListener('click', () => {
@@ -306,12 +342,11 @@ document.querySelectorAll('.tab').forEach(tab => {
     tab.classList.add('active');
     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
     document.getElementById(`tab-${tab.dataset.tab}`).classList.add('active');
-    playlistBox.classList.remove('show');
   });
 });
 
 // ==============================================
-// 📐 ปรับโหมดภาพ — กำจัดขอบดำ
+// 📐 ปรับโหมดภาพ
 // ==============================================
 document.querySelectorAll('.mode-btn').forEach(btn => {
   btn.addEventListener('click', () => {
@@ -323,22 +358,15 @@ document.querySelectorAll('.mode-btn').forEach(btn => {
 
 function setMode(mode) {
   video.style.objectFit = 'contain';
-  videoWrap.style.aspectRatio = '16/9';
-  videoWrap.style.borderRadius = '12px';
-  videoWrap.style.width = '100%';
-  videoWrap.style.height = '';
+  document.getElementById('videoWrap').style.aspectRatio = '16/9';
 
   switch(mode) {
     case 'contain': video.style.objectFit = 'contain'; break;
     case 'cover': video.style.objectFit = 'cover'; break;
     case 'fill': video.style.objectFit = 'fill'; break;
-    case '16:9': video.style.objectFit = 'contain'; videoWrap.style.aspectRatio = '16/9'; break;
+    case '16:9': video.style.objectFit = 'contain'; break;
     case 'full':
-      video.style.objectFit = 'contain';
-      videoWrap.style.aspectRatio = 'unset';
-      videoWrap.style.borderRadius = '0';
-      videoWrap.style.width = '100vw';
-      videoWrap.style.height = '100vh';
+      video.style.objectFit = 'cover';
       if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(() => {});
       break;
   }
@@ -352,7 +380,6 @@ document.querySelectorAll('.type-btn').forEach(btn => {
     document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     currentType = btn.dataset.type;
-    showStatus(`✅ เลือกประเภท: ${currentType}`, 'ok');
   });
 });
 
@@ -368,45 +395,64 @@ async function pasteTo(inputId) {
     showStatus('⚠️ ไม่สามารถอ่านคลิปบอร์ดได้', 'warn');
   }
 }
-
 document.getElementById('pasteUrlBtn').addEventListener('click', () => pasteTo('urlInput'));
 document.getElementById('pasteRefBtn').addEventListener('click', () => pasteTo('refererInput'));
-document.getElementById('pasteUaBtn').addEventListener('click', () => pasteTo('uaInput'));
 document.getElementById('pasteM3uBtn').addEventListener('click', () => pasteTo('m3uUrlInput'));
 
 // ==============================================
-// ▶️ ทดสอบเล่น — เล่นตรง
+// 📂 เลือกไฟล์ในเครื่อง — รองรับ .m3u / .json / .w3u
 // ==============================================
-document.getElementById('testBtn').addEventListener('click', () => {
-  const url = document.getElementById('urlInput').value.trim();
-  const referer = document.getElementById('refererInput').value.trim();
+document.getElementById('selectFileBtn').addEventListener('click', () => {
+  document.getElementById('fileInput').click();
+});
 
-  if (!url) return showStatus('⚠️ กรุณาใส่ลิงก์ URL', 'err');
+document.getElementById('fileInput').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
 
-  currentUrl = url;
-  currentReferer = referer;
+  showStatus('⏳ กำลังอ่านไฟล์...', 'warn');
+  const reader = new FileReader();
+  
+  reader.onload = (event) => {
+    const content = event.target.result;
+    let channels = [];
 
-  showStatus('⏳ กำลังโหลด...', 'warn');
-  stopAll();
-  videoBox.style.display = 'none';
-  extBar.style.display = 'none';
-  playlistBox.classList.remove('show');
+    // ตรวจสอบประเภทไฟล์
+    if (file.name.endsWith('.m3u') || file.name.endsWith('.m3u8')) {
+      channels = parseM3U(content);
+    } else if (file.name.endsWith('.json')) {
+      channels = parseJSON(content);
+    } else if (file.name.endsWith('.w3u')) {
+      channels = parseW3U(content);
+    } else {
+      // ลองทุกแบบ
+      channels = parseM3U(content);
+      if (!channels.length) channels = parseJSON(content);
+      if (!channels.length) channels = parseW3U(content);
+    }
 
-  switch (currentType) {
-    case 'web_url': playWebUrl(url); break;
-    case 'play': case 'm3u8': playHLS(url, referer); break;
-    case 'mp4': playMP4(url); break;
-    case 'mpd': playDASH(url); break;
-    default: autoDetectAndPlay(url, referer);
-  }
+    if (channels.length > 0) {
+      allChannels = channels;
+      categories = [...new Set(allChannels.map(c => c.group))].sort();
+      renderCategories();
+      renderChannels();
+      playlistBox.classList.add('show');
+      backBtn.classList.remove('hidden');
+      showStatus(`✅ โหลดสำเร็จ! ${channels.length} ช่อง`, 'ok');
+    } else {
+      showStatus('❌ ไม่สามารถอ่านไฟล์ได้', 'err');
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
 });
 
 // ==============================================
-// 📥 โหลด M3U เพลย์ลิสต์
+// 📥 โหลด M3U/JSON/W3U จากลิงก์
 // ==============================================
 document.getElementById('loadM3uBtn').addEventListener('click', async () => {
   const url = document.getElementById('m3uUrlInput').value.trim();
-  if (!url) return showStatus('⚠️ กรุณาใส่ลิงก์ .m3u', 'err');
+  if (!url) return showStatus('⚠️ กรุณาใส่ลิงก์ไฟล์', 'err');
   
   showStatus('⏳ กำลังโหลดเพลย์ลิสต์...', 'warn');
   
@@ -414,21 +460,42 @@ document.getElementById('loadM3uBtn').addEventListener('click', async () => {
     const res = await fetch(url);
     if (!res.ok) throw new Error('Load failed');
     const text = await res.text();
-    parseM3U(text);
-    showStatus(`✅ โหลดสำเร็จ! ทั้งหมด ${allChannels.length} ช่อง`, 'ok');
-    renderCategories();
-    renderChannels();
-    playlistBox.classList.add('show');
+    
+    let channels = [];
+    if (url.includes('.m3u') || url.includes('.m3u8')) {
+      channels = parseM3U(text);
+    } else if (url.includes('.json')) {
+      channels = parseJSON(text);
+    } else if (url.includes('.w3u')) {
+      channels = parseW3U(text);
+    } else {
+      channels = parseM3U(text);
+      if (!channels.length) channels = parseJSON(text);
+      if (!channels.length) channels = parseW3U(text);
+    }
+
+    if (channels.length > 0) {
+      allChannels = channels;
+      categories = [...new Set(allChannels.map(c => c.group))].sort();
+      renderCategories();
+      renderChannels();
+      playlistBox.classList.add('show');
+      backBtn.classList.remove('hidden');
+      showStatus(`✅ โหลดสำเร็จ! ${channels.length} ช่อง`, 'ok');
+    } else {
+      showStatus('❌ ไม่พบรายการช่องในไฟล์', 'err');
+    }
   } catch (e) {
-    showStatus('⚠️ ถูกบล็อก CORS — ลองดึงลิงก์แต่ละช่องมาใส่ที่แท็บ "เล่นตรง" แทน', 'err');
+    console.error(e);
+    showStatus('⚠️ ถูกบล็อก CORS — ลองใช้ไฟล์ในเครื่องแทน', 'err');
   }
 });
 
 // ==============================================
-// 🔧 แปลงข้อมูล M3U
+// 🔧 PARSE M3U
 // ==============================================
 function parseM3U(text) {
-  allChannels = [];
+  const channels = [];
   const lines = text.split('\n');
   let ch = { name: '', url: '', logo: '', group: 'ทั่วไป' };
   
@@ -446,12 +513,89 @@ function parseM3U(text) {
       };
     } else if (line && !line.startsWith('#') && line.startsWith('http')) {
       ch.url = line;
-      allChannels.push({ ...ch });
+      channels.push({ ...ch });
       ch = { name: '', url: '', logo: '', group: 'ทั่วไป' };
     }
   }
-  
-  categories = [...new Set(allChannels.map(c => c.group))].sort();
+  return channels;
+}
+
+// ==============================================
+// 🔧 PARSE JSON — รองรับ .json
+// ==============================================
+function parseJSON(text) {
+  try {
+    const data = JSON.parse(text);
+    const channels = [];
+    
+    if (Array.isArray(data)) {
+      data.forEach(item => {
+        channels.push({
+          name: item.name || item.title || 'ไม่มีชื่อ',
+          url: item.url || item.link || item.src || '',
+          logo: item.image || item.logo || '',
+          group: item.group || item.groupTitle || 'ทั่วไป'
+        });
+      });
+    } else if (data.groups && Array.isArray(data.groups)) {
+      data.groups.forEach(group => {
+        if (group.stations && Array.isArray(group.stations)) {
+          group.stations.forEach(station => {
+            channels.push({
+              name: station.name || 'ไม่มีชื่อ',
+              url: station.url || station.link || '',
+              logo: station.image || group.image || '',
+              group: group.name || 'ทั่วไป'
+            });
+          });
+        }
+      });
+    } else if (data.channels && Array.isArray(data.channels)) {
+      data.channels.forEach(item => {
+        channels.push({
+          name: item.name || item.title || 'ไม่มีชื่อ',
+          url: item.url || item.link || '',
+          logo: item.logo || item.image || '',
+          group: item.group || 'ทั่วไป'
+        });
+      });
+    }
+    return channels;
+  } catch (e) {
+    console.error('JSON Parse Error:', e);
+    return [];
+  }
+}
+
+// ==============================================
+// 🔧 PARSE W3U — รองรับ .w3u
+// ==============================================
+function parseW3U(text) {
+  try {
+    const data = JSON.parse(text);
+    const channels = [];
+    
+    if (data.groups && Array.isArray(data.groups)) {
+      data.groups.forEach(group => {
+        if (group.stations && Array.isArray(group.stations)) {
+          group.stations.forEach(station => {
+            channels.push({
+              name: station.name || 'ไม่มีชื่อ',
+              url: station.url || station.link || '',
+              logo: station.image || group.image || data.image || '',
+              group: group.name || 'ทั่วไป'
+            });
+          });
+        }
+      });
+    } else {
+      return parseJSON(text);
+    }
+    return channels;
+  } catch (e) {
+    console.error('W3U Parse Error:', e);
+    return [];
+  }
 }
 
 // ==============================================
@@ -502,58 +646,74 @@ function renderChannels() {
 }
 
 // ==============================================
-// 🎬 เล่นช่องจากเพลย์ลิสต์
+// 🎬 เล่นช่อง — เพลย์ลิสต์ไม่หาย!
 // ==============================================
 function playChannel(index) {
   playingIndex = index;
   const ch = allChannels[index];
   
+  // ✅ ไม่เปลี่ยนแท็บ — รายการยังคงอยู่!
   document.querySelectorAll('.ch-item').forEach((item, idx) => {
     item.classList.toggle('playing', idx === index);
   });
   
   document.getElementById('urlInput').value = ch.url;
-  document.querySelector('[data-tab="direct"]').click();
-  
   currentUrl = ch.url;
+  
   stopAll();
-  videoBox.style.display = 'none';
-  extBar.style.display = 'none';
-  autoDetectAndPlay(ch.url, '');
+  videoBox.style.display = 'block';
+  document.getElementById('extBar').style.display = 'grid';
+  
+  autoDetectAndPlay(ch.url);
 }
 
 // ==============================================
-// 🌐 เล่น web_url — เปิดใน iframe
+// ▶️ ทดสอบเล่น — เล่นตรง
+// ==============================================
+document.getElementById('testBtn').addEventListener('click', () => {
+  const url = document.getElementById('urlInput').value.trim();
+  const referer = document.getElementById('refererInput').value.trim();
+  if (!url) return showStatus('⚠️ กรุณาใส่ลิงก์ URL', 'err');
+
+  currentUrl = url;
+  stopAll();
+  videoBox.style.display = 'block';
+  document.getElementById('extBar').style.display = 'grid';
+
+  switch (currentType) {
+    case 'web_url': playWebUrl(url); break;
+    case 'play': case 'm3u8': playHLS(url, referer); break;
+    case 'mp4': playMP4(url); break;
+    case 'mpd': playDASH(url); break;
+    default: autoDetectAndPlay(url, referer);
+  }
+});
+
+// ==============================================
+// 🌐 เล่น web_url
 // ==============================================
 function playWebUrl(url) {
-  videoBox.style.display = 'block';
-  extBar.style.display = 'grid';
-  
   video.style.display = 'none';
   webIframe.style.display = 'block';
   webIframe.src = url;
-  
-  showStatus('✅ กำลังโหลดหน้าเว็บ... (web_url)', 'ok');
-  if (currentReferer) showStatus(`✅ Referer: ${currentReferer}`, 'ok');
+  showStatus('✅ กำลังโหลดหน้าเว็บ...', 'ok');
 }
 
 // ==============================================
 // 🔄 ตรวจอัตโนมัติ
 // ==============================================
-function autoDetectAndPlay(url, referer) {
+function autoDetectAndPlay(url, referer = '') {
   const u = url.toLowerCase();
-  if (u.includes('.m3u8')) { currentType = 'm3u8'; playHLS(url, referer); }
-  else if (u.includes('.mpd')) { currentType = 'mpd'; playDASH(url); }
-  else if (u.includes('.mp4') || u.includes('.webm')) { currentType = 'mp4'; playMP4(url); }
-  else { currentType = 'web_url'; playWebUrl(url); }
+  if (u.includes('.m3u8')) { playHLS(url, referer); }
+  else if (u.includes('.mpd')) { playDASH(url); }
+  else if (u.includes('.mp4') || u.includes('.webm')) { playMP4(url); }
+  else { playWebUrl(url); }
 }
 
 // ==============================================
 // 🎬 เล่น HLS (.m3u8)
 // ==============================================
-function playHLS(url, referer) {
-  videoBox.style.display = 'block';
-  extBar.style.display = 'grid';
+function playHLS(url, referer = '') {
   video.style.display = 'block';
   webIframe.style.display = 'none';
 
@@ -569,14 +729,12 @@ function playHLS(url, referer) {
     });
     hls.loadSource(url);
     hls.attachMedia(video);
-
     hls.on(Hls.Events.MANIFEST_PARSED, () => {
       showStatus('✅ กำลังเล่น (HLS.js)', 'ok');
-      video.play().catch(() => showStatus('⚠️ คลิกเพื่อเล่น', 'warn'));
+      video.play().catch(() => {});
     });
-
     hls.on(Hls.Events.ERROR, (_, data) => {
-      if (data.fatal) showStatus('❌ ไม่สามารถโหลดได้ — ลิงก์อาจหมดอายุหรือถูกบล็อก', 'err');
+      if (data.fatal) showStatus('❌ เล่นไม่ได้ — ลิงก์อาจหมดอายุ', 'err');
     });
   } else {
     showStatus('❌ เบราว์เซอร์ไม่รองรับ HLS', 'err');
@@ -587,26 +745,20 @@ function playHLS(url, referer) {
 // 🎬 เล่น DASH (.mpd)
 // ==============================================
 function playDASH(url) {
-  videoBox.style.display = 'block';
-  extBar.style.display = 'grid';
   video.style.display = 'block';
   webIframe.style.display = 'none';
 
   dashPlayer = dashjs.MediaPlayer().create();
   dashPlayer.initialize(video, url, true);
   dashPlayer.on('streamInitialized', () => showStatus('✅ กำลังเล่น DASH', 'ok'));
-  dashPlayer.on('error', () => showStatus('❌ DASH เล่นไม่ได้', 'err'));
 }
 
 // ==============================================
 // 🎬 เล่น MP4
 // ==============================================
 function playMP4(url) {
-  videoBox.style.display = 'block';
-  extBar.style.display = 'grid';
   video.style.display = 'block';
   webIframe.style.display = 'none';
-
   video.src = url;
   video.play().then(() => showStatus('✅ กำลังเล่น MP4', 'ok'));
 }
@@ -623,45 +775,19 @@ function stopAll() {
 }
 
 // ==============================================
-// 📱 เปิดในแอปอื่น — ใช้ระบบเลือกแอปเอง
+// 📱 เปิดในแอปอื่น
 // ==============================================
 document.getElementById('openInAppBtn').addEventListener('click', () => {
   let url = currentUrl || document.getElementById('urlInput').value.trim();
-  if (!url) return alert('⚠️ ไม่มีลิงก์วิดีโอครับ กดทดสอบเล่นก่อนหรือใส่ลิงก์ก่อนครับ');
+  if (!url) return alert('⚠️ ไม่มีลิงก์วิดีโอครับ');
 
-  // ✅ 1. ถอดรหัส URL ก่อน (แก้ปัญหา %3A → : , %2F → /)
-  let cleanUrl = decodeURIComponent(url);
+  const cleanUrl = decodeURIComponent(url).split('|')[0].split('#')[0];
+  window.location.href = `intent:${encodeURI(cleanUrl)}#Intent;action=android.intent.action.VIEW;type=video/*;end`;
 
-  // ✅ 2. ตัดส่วนเกินออก: |referer=... ซ้ำๆ และ #Intent;... ท้ายสุด
-  // แยกเอาเฉพาะส่วนลิงก์หลักก่อน | หรือ #
-  cleanUrl = cleanUrl.split('|')[0].split('#')[0];
-
-  // ✅ 3. ถ้ามี |referer= อยู่ ให้แยกออกมาเป็นพารามิเตอร์ถูกต้อง
-  let refererValue = '';
-  const refererMatch = decodeURIComponent(url).match(/[?&|]referer=([^&|#]+)/);
-  if (refererMatch) {
-    refererValue = decodeURIComponent(refererMatch[1]);
-  }
-
-  // ✅ 4. สร้าง Intent ที่สะอาด ไม่มีส่วนเกิน
-  let intentUrl = `intent:${encodeURI(cleanUrl)}#Intent;action=android.intent.action.VIEW;type=video/*;`;
-  
-  // ถ้ามี Referer ให้ส่งไปด้วยแบบถูกต้อง
-  if (refererValue) {
-    intentUrl += `S.referer=${encodeURIComponent(refererValue)};`;
-  }
-  
-  intentUrl += `end`;
-
-  // 🚀 ส่งไปยังระบบ
-  window.location.href = intentUrl;
-
-  // ⏱️ ถ้าไม่มีแอปเปิดได้ → แจ้งเตือน + คัดลอกลิงก์สะอาด
   setTimeout(() => {
-    if (confirm('❌ ไม่สามารถเปิดแอปได้ หรือไม่มีแอปที่รองรับ\n✅ ต้องการคัดลอกลิงก์ไปวางในแอปเองไหม?')) {
-      navigator.clipboard.writeText(cleanUrl).then(() => {
-        alert('✅ คัดลอกลิงก์แล้วครับ!\n' + (refererValue ? `(มี Referer ด้วย)\n` : '') + 'เปิดแอปฯ → วางลิงก์เพื่อเล่นได้เลยครับ');
-      });
+    if (confirm('❌ ไม่มีแอปเปิดได้ คัดลอกลิงก์ไปวางในแอปเองไหม?')) {
+      navigator.clipboard.writeText(cleanUrl);
+      alert('✅ คัดลอกแล้วครับ!');
     }
   }, 1200);
 });
@@ -676,10 +802,7 @@ document.getElementById('copyBtn').addEventListener('click', () => {
     const btn = document.getElementById('copyBtn');
     btn.classList.add('copied');
     btn.innerHTML = '✅ คัดลอก!';
-    setTimeout(() => {
-      btn.classList.remove('copied');
-      btn.innerHTML = '📋 คัดลอก';
-    }, 2000);
+    setTimeout(() => { btn.classList.remove('copied'); btn.innerHTML = '📋 คัดลอก'; }, 2000);
   });
 });
 
@@ -692,6 +815,5 @@ function showStatus(text, type = 'ok') {
   if (type === 'ok') setTimeout(() => status.classList.remove('show'), 8000);
 }
 </script>
-
 </body>
 </html>
