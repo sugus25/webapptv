@@ -3,404 +3,471 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=5.0,user-scalable=yes">
-  <title>📺 IPTV Tester — ครบทุกฟอร์แมต</title>
   
+  <!-- ✅ PWA -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#2563eb">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="ต้นทีวีออนไลน์">
+  <meta name="description" content="ต้นทีวีออนไลน์ — สลับโหมดกริด/รายการ สวยเหมือน Wiseplay Pro">
+  
+  <!-- ✅ ไอคอน -->
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  
+  <title>📺 ต้นทีวีออนไลน์ — สลับกริด/รายการ</title>
+  
+  <!-- ✅ ไลบรารีเครื่องเล่น -->
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.21/dist/hls.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/dashjs@4.7.4/dist/dash.all.min.js"></script>
   
   <style>
     :root {
-      --bg: #12121f; --s1: #1e1e2f; --s2: #2a2a3f; --s3: #353550;
+      --bg: #0f172a; --s1: #1e293b; --s2: #334155; --s3: #475569;
       --b1: rgba(255,255,255,0.08); --b2: rgba(255,255,255,0.12);
-      --accent: #00c8ff; --accent2: #7b2ffd;
-      --t1: #f0f0ff; --t2: #a0a0c0; --t3: #606080;
-      --ok: #00d887; --danger: #ff4757; --warn: #ffa502;
-      --blue: #2563eb;
+      --primary: #2563eb; --primary-light: #3b82f6; --primary-dark: #1d4ed8;
+      --secondary: #7c3aed; --accent: #06b6d4;
+      --t1: #f8fafc; --t2: #cbd5e1; --t3: #64748b;
+      --ok: #10b981; --danger: #ef4444; --warn: #f59e0b;
+      --purple: #8b5cf6; --green: #22c55e; --orange: #f97316;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
-    body { background: var(--bg); color: var(--t1); min-height: 100vh; padding: 16px; padding-top: 60px; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+    body { background: var(--bg); color: var(--t1); min-height: 100vh; padding-bottom: 80px; }
 
-    /* ===== ↩️ ปุ่มย้อนกลับ ===== */
-    .back-btn {
-      position: fixed; top: 12px; left: 12px; z-index: 1000;
-      background: var(--accent); color: #fff; border: none;
-      padding: 8px 16px; border-radius: 8px; font-size: 14px; font-weight: 600;
-      cursor: pointer; display: flex; align-items: center; gap: 6px;
-      box-shadow: 0 2px 10px rgba(0,200,255,0.3); transition: 0.2s;
+    /* 📌 แถบด้านบน */
+    .header-bar {
+      position: sticky; top: 0; z-index: 100;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      padding: 14px 16px; display: flex; align-items: center; justify-content: space-between;
+      box-shadow: 0 4px 20px rgba(37,99,235,0.3);
     }
-    .back-btn:hover { transform: scale(1.05); }
-    .back-btn.hidden { display: none; }
+    .header-left { display: flex; align-items: center; gap: 10px; }
+    .menu-btn {
+      width: 40px; height: 40px; border-radius: 10px; border: none;
+      background: rgba(255,255,255,0.2); color: #fff; font-size: 20px;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: 0.2s;
+    }
+    .menu-btn:hover { background: rgba(255,255,255,0.3); }
+    .app-title { font-size: 18px; font-weight: 700; color: #fff; }
+    .app-sub { font-size: 11px; color: rgba(255,255,255,0.8); margin-top: 2px; }
 
-    .container { max-width: 600px; margin: 0 auto; }
-    h1 { text-align: center; margin-bottom: 20px; color: var(--accent); font-size: 20px; }
+    /* ↩️ ปุ่มย้อนกลับ */
+    .back-header {
+      position: sticky; top: 0; z-index: 99;
+      background: var(--primary); padding: 12px 16px;
+      display: flex; align-items: center; gap: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    }
+    .back-header.hidden { display: none; }
+    .back-icon {
+      width: 36px; height: 36px; border-radius: 8px; border: none;
+      background: rgba(255,255,255,0.2); color: #fff; font-size: 18px;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+    }
+    .back-title { font-size: 17px; font-weight: 600; color: #fff; }
 
-    /* ===== 🎬 เครื่องเล่น ===== */
-    .video-box { background: #000; border-radius: 12px; overflow: hidden; margin-bottom: 16px; box-shadow: 0 4px 24px rgba(0,0,0,0.5); display: none; }
-    .video-wrap { width: 100%; aspect-ratio: 16/9; background: #000; position: relative; overflow: hidden; }
+    /* 🔍 แถบค้นหา + สลับโหมด */
+    .top-controls {
+      padding: 16px; display: flex; gap: 10px; align-items: center;
+      background: var(--s1); border-bottom: 1px solid var(--b1);
+      position: sticky; top: 60px; z-index: 90;
+    }
+    .search-box {
+      flex: 1; padding: 12px 16px; border-radius: 12px; border: none;
+      background: var(--s2); color: var(--t1); font-size: 15px; outline: none;
+    }
+    .search-box::placeholder { color: var(--t3); }
+    .view-toggle {
+      display: flex; gap: 4px; background: var(--s2); border-radius: 10px; padding: 4px;
+    }
+    .view-btn {
+      width: 40px; height: 40px; border-radius: 8px; border: none;
+      background: transparent; color: var(--t2); font-size: 18px; cursor: pointer;
+      transition: 0.2s;
+    }
+    .view-btn.active { background: var(--primary); color: #fff; box-shadow: 0 2px 6px rgba(37,99,235,0.4); }
+
+    /* 📂 หมวดหมู่ */
+    .category-scroll {
+      padding: 12px 16px; display: flex; gap: 10px; overflow-x: auto;
+      background: var(--bg); border-bottom: 1px solid var(--b1);
+      scrollbar-width: none; -ms-overflow-style: none;
+    }
+    .category-scroll::-webkit-scrollbar { display: none; }
+    .cat-chip {
+      padding: 10px 18px; border-radius: 20px; border: 2px solid transparent;
+      background: var(--s1); color: var(--t2); font-size: 14px; font-weight: 500;
+      cursor: pointer; white-space: nowrap; transition: 0.2s;
+    }
+    .cat-chip:hover { border-color: var(--primary); color: var(--primary-light); }
+    .cat-chip.active {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: #fff; border-color: transparent; box-shadow: 0 2px 10px rgba(37,99,235,0.3);
+    }
+
+    /* 📋 โหมดกริด — สวยเหมือนตัวอย่าง */
+    .content-container { padding: 16px; }
+    .grid-view {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 16px;
+    }
+    .grid-card {
+      background: var(--s1); border-radius: 16px; overflow: hidden;
+      border: 2px solid transparent; cursor: pointer; transition: 0.3s;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    .grid-card:hover {
+      transform: translateY(-4px); border-color: var(--primary);
+      box-shadow: 0 8px 24px rgba(37,99,235,0.25);
+    }
+    .grid-card.selected { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,0.4); }
+    .card-image-wrap {
+      width: 100%; aspect-ratio: 16/9; background: linear-gradient(135deg, var(--s2), var(--s3));
+      display: flex; align-items: center; justify-content: center; overflow: hidden;
+    }
+    .card-image { width: 100%; height: 100%; object-fit: cover; }
+    .card-placeholder { font-size: 40px; color: var(--t3); }
+    .card-body { padding: 12px; }
+    .card-title { font-size: 15px; font-weight: 600; color: var(--t1); margin-bottom: 4px; }
+    .card-meta { font-size: 12px; color: var(--t3); display: flex; align-items: center; gap: 6px; }
+    .card-badge {
+      display: inline-flex; align-items: center; justify-content: center;
+      background: var(--primary); color: #fff; font-size: 10px;
+      padding: 2px 8px; border-radius: 10px; margin-top: 8px;
+    }
+
+    /* 📋 โหมดรายการ */
+    .list-view { display: flex; flex-direction: column; gap: 10px; }
+    .list-item {
+      display: flex; align-items: center; gap: 14px;
+      background: var(--s1); border-radius: 12px; padding: 14px;
+      border: 2px solid transparent; cursor: pointer; transition: 0.2s;
+    }
+    .list-item:hover { border-color: var(--primary); background: var(--s2); }
+    .list-item.selected { border-color: var(--primary); background: rgba(37,99,235,0.1); }
+    .list-thumb {
+      width: 56px; height: 56px; border-radius: 10px; background: linear-gradient(135deg, var(--s2), var(--s3));
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+      overflow: hidden;
+    }
+    .list-thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .list-info { flex: 1; min-width: 0; }
+    .list-name { font-size: 15px; font-weight: 600; color: var(--t1); margin-bottom: 3px; }
+    .list-desc { font-size: 12px; color: var(--t3); }
+    .list-arrow { color: var(--t3); font-size: 18px; }
+
+    /* 🎬 เครื่องเล่น */
+    .player-container {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 200;
+      background: var(--s1); border-top-left-radius: 20px; border-top-right-radius: 20px;
+      padding: 16px; box-shadow: 0 -4px 30px rgba(0,0,0,0.3);
+      transform: translateY(100%); transition: transform 0.3s ease-out;
+    }
+    .player-container.show { transform: translateY(0); }
+    .video-wrapper { width: 100%; aspect-ratio: 16/9; background: #000; border-radius: 12px; overflow: hidden; margin-bottom: 12px; }
     video, iframe { width: 100%; height: 100%; display: block; border: none; }
-    video { object-fit: contain; }
-    .web-view { width: 100%; height: 100%; border: none; }
+    .player-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 12px; }
+    .action-btn {
+      padding: 12px 8px; border-radius: 10px; border: none;
+      font-size: 13px; font-weight: 600; color: #fff; cursor: pointer; transition: 0.2s;
+    }
+    .action-btn:hover { transform: translateY(-2px); }
+    .btn-exo { background: linear-gradient(135deg, #00c8ff, #0099cc); }
+    .btn-app { background: linear-gradient(135deg, #f97316, #ea580c); }
+    .btn-copy { background: linear-gradient(135deg, #10b981, #059669); }
 
-    /* ===== 📐 ปรับขนาดหน้าจอ ===== */
-    .mode-bar {
-      display: flex; flex-wrap: wrap; gap: 6px;
-      padding: 12px; background: var(--s2);
-      border-top: 1px solid var(--b1);
-    }
-    .mode-label { width: 100%; font-size: 12px; color: var(--t2); margin-bottom: 4px; }
-    .mode-btn {
-      flex: 1; min-width: 75px; padding: 8px 6px; border-radius: 6px;
-      border: 1px solid var(--b1); background: var(--s3);
-      color: var(--t2); cursor: pointer; font-size: 12px; transition: 0.2s;
-    }
-    .mode-btn:hover { border-color: var(--accent); color: var(--accent); }
-    .mode-btn.active {
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
-      border-color: transparent; color: #fff;
-    }
-
-    /* ===== 📋 ฟอร์ม ===== */
-    .form-card { background: var(--s1); border-radius: 12px; padding: 20px; border: 1px solid var(--b1); margin-bottom: 16px; }
-    .section-title { font-size: 15px; font-weight: 600; margin-bottom: 12px; color: var(--accent); }
-
-    /* ===== แท็บ ===== */
-    .tabs { display: flex; gap: 8px; margin-bottom: 16px; }
-    .tab {
-      flex: 1; padding: 10px; border-radius: 8px; border: 1px solid transparent;
-      background: var(--s2); color: var(--t2); cursor: pointer; font-size: 14px; text-align: center; transition: 0.2s;
-    }
-    .tab.active { background: var(--blue); color: #fff; border-color: var(--blue); }
-    .tab-content { display: none; }
-    .tab-content.active { display: block; }
-
-    /* ===== ประเภทลิงก์ ===== */
-    .type-bar { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
-    .type-btn {
-      padding: 8px 12px; border-radius: 6px; border: 2px solid transparent;
-      background: var(--s2); color: var(--t2); cursor: pointer; font-size: 13px; font-weight: 500;
-      transition: 0.2s;
-    }
-    .type-btn:hover { border-color: var(--accent); color: var(--accent); }
-    .type-btn.active {
-      background: var(--blue); border-color: var(--blue); color: #fff;
-      box-shadow: 0 2px 8px rgba(37,99,235,0.3);
-    }
-
-    /* ===== ช่องกรอกข้อมูล ===== */
-    .input-group { margin-bottom: 14px; }
-    .label { display: block; margin-bottom: 6px; color: var(--t2); font-size: 13px; }
-    .input-wrap { position: relative; display: flex; align-items: center; }
+    /* 📋 ฟอร์มเพิ่มเพลย์ลิสต์ */
+    .add-section { padding: 16px; }
+    .section-title { font-size: 16px; font-weight: 700; color: var(--t1); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
     .input-field {
-      width: 100%; padding: 12px 44px 12px 14px; border-radius: 8px;
-      border: 1px solid var(--b2); background: var(--s2); color: var(--t1);
-      font-size: 14px; outline: none; transition: 0.2s;
-      font-family: monospace; word-break: break-all;
+      width: 100%; padding: 14px 16px; border-radius: 12px; border: none;
+      background: var(--s1); color: var(--t1); font-size: 15px; outline: none;
+      margin-bottom: 12px;
     }
-    .input-field:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,200,255,0.15); }
-    .paste-btn {
-      position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
-      padding: 8px 10px; border-radius: 6px; border: none;
-      background: var(--accent2); color: #fff; cursor: pointer; font-size: 13px;
-      transition: 0.2s;
+    .input-field:focus { box-shadow: 0 0 0 2px var(--primary); }
+    .primary-btn {
+      width: 100%; padding: 14px; border-radius: 12px; border: none;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: #fff; font-size: 16px; font-weight: 700; cursor: pointer;
+      transition: 0.2s; box-shadow: 0 4px 15px rgba(37,99,235,0.3);
     }
-    .paste-btn:hover { background: #6b21d8; }
-
-    /* ===== ปุ่มโหลดไฟล์ ===== */
-    .file-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+    .primary-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(37,99,235,0.4); }
+    .file-row { display: flex; gap: 10px; margin-top: 12px; }
     .file-btn {
-      flex: 1; min-width: 140px; padding: 12px; border-radius: 8px; border: none;
-      background: linear-gradient(135deg, #10b981, #059669); color: #fff;
-      font-size: 14px; font-weight: 600; cursor: pointer; transition: 0.2s;
+      flex: 1; padding: 12px; border-radius: 10px; border: none;
+      background: var(--s2); color: var(--t1); font-size: 14px; font-weight: 600; cursor: pointer; transition: 0.2s;
     }
-    .file-btn:hover { transform: translateY(-2px); }
+    .file-btn:hover { background: var(--s3); }
     input[type="file"] { display: none; }
 
-    /* ===== ปุ่มทดสอบเล่น ===== */
-    .play-btn {
-      width: 100%; padding: 14px; border-radius: 10px; border: none;
-      background: linear-gradient(135deg, #00c8ff, #7b2ffd);
-      color: #fff; font-size: 16px; font-weight: 600; cursor: pointer;
-      transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px;
-      margin-top: 4px;
+    /* สถานะ */
+    .toast {
+      position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%) translateY(100px);
+      background: rgba(15,23,42,0.95); color: #fff; padding: 12px 24px;
+      border-radius: 10px; font-size: 14px; z-index: 300; opacity: 0; transition: 0.3s;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
     }
-    .play-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,200,255,0.25); }
-    .play-btn span { font-size: 20px; }
+    .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
 
-    /* ===== สถานะ ===== */
-    .status {
-      margin-top: 14px; padding: 12px 16px; border-radius: 8px; font-size: 14px; display: none;
-    }
-    .status.show { display: block; }
-    .status.ok { background: rgba(0,216,135,0.1); border: 1px solid var(--ok); color: var(--ok); }
-    .status.err { background: rgba(255,71,87,0.1); border: 1px solid var(--danger); color: var(--danger); }
-    .status.warn { background: rgba(255,165,2,0.1); border: 1px solid var(--warn); color: var(--warn); }
+    /* ซ่อน/แสดงโหมด */
+    .grid-container { display: none; }
+    .grid-container.active { display: block; }
+    .list-container { display: none; }
+    .list-container.active { display: block; }
+    .empty-state { text-align: center; padding: 60px 20px; color: var(--t3); }
+    .empty-icon { font-size: 60px; margin-bottom: 16px; opacity: 0.5; }
 
-    /* ===== 📂 หมวดหมู่ ===== */
-    .category-bar {
-      display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0;
-      padding-bottom: 12px; border-bottom: 1px solid var(--b1);
-    }
-    .category-btn {
-      padding: 8px 14px; border-radius: 20px; border: 1px solid var(--b1);
-      background: var(--s2); color: var(--t2); cursor: pointer;
-      font-size: 13px; transition: 0.2s; white-space: nowrap;
-    }
-    .category-btn:hover, .category-btn.active {
-      background: var(--accent2); color: #fff; border-color: var(--accent2);
-    }
-    .category-all { background: linear-gradient(135deg, var(--accent), var(--accent2)); border: none; color: #fff; }
-
-    /* ===== 📋 รายการช่อง — ไม่หายเมื่อกดเล่น! ===== */
-    .playlist-box { background: var(--s1); border-radius: 12px; padding: 16px; border: 1px solid var(--b1); margin-top: 16px; display: none; }
-    .playlist-box.show { display: block; }
-    .playlist-title { font-size: 16px; font-weight: 600; margin-bottom: 8px; color: var(--accent); }
-    .ch-item {
-      padding: 12px 14px; border-radius: 8px; background: var(--s2);
-      border: 1px solid var(--b1); cursor: pointer; transition: 0.2s;
-      margin-bottom: 8px; font-size: 14px;
-    }
-    .ch-item.hidden { display: none; }
-    .ch-item:hover { background: var(--s3); border-color: var(--accent); transform: translateX(4px); }
-    .ch-item.playing { border-color: var(--accent); background: rgba(0,200,255,0.1); }
-
-    /* ===== ปุ่มเปิดภายนอก ===== */
-    .ext-bar { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px; }
-    .ext-btn {
-      padding: 14px 8px; border-radius: 10px; border: none; cursor: pointer;
-      font-size: 14px; font-weight: 600; color: #fff; transition: 0.2s;
-    }
-    .ext-btn:hover { transform: translateY(-2px); }
-    .ext-open { background: linear-gradient(135deg, #f97316, #ea580c); }
-    .ext-copy { background: linear-gradient(135deg, #10b981, #059669); }
-    .ext-copy.copied { background: #4ade80; color: #000; }
-
-    /* ===== มือถือ ===== */
+    /* มือถือ */
     @media (max-width: 480px) {
-      body { padding: 12px; padding-top: 55px; }
-      .type-btn { padding: 7px 10px; font-size: 12px; }
-      .mode-btn { min-width: 65px; padding: 7px 4px; font-size: 11px; }
-      .ext-bar { grid-template-columns: 1fr 1fr; }
+      .grid-view { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
+      .top-controls { flex-wrap: wrap; }
+      .search-box { width: 100%; order: 3; margin-top: 10px; }
     }
   </style>
 </head>
 <body>
 
-  <!-- ↩️ ปุ่มย้อนกลับ -->
-  <button class="back-btn hidden" id="backBtn">← กลับ</button>
-
-<div class="container">
-  <h1>📺 IPTV Tester — รองรับ M3U / JSON / W3U</h1>
-
-  <!-- ===== 🎬 เครื่องเล่น ===== -->
-  <div class="video-box" id="videoBox">
-    <div class="video-wrap" id="videoWrap">
-      <video id="video" controls="" playsinline="" preload="metadata" style="display: none;"></video>
-      <iframe id="webIframe" class="web-view" style="display: none;" allow="autoplay; fullscreen; picture-in-picture"></iframe>
-    </div>
-
-    <!-- 📐 ปรับขนาดหน้าจอ -->
-    <div class="mode-bar">
-      <span class="mode-label">📐 โหมดแสดงภาพ</span>
-      <button class="mode-btn active" data-mode="contain">⚙ Contain</button>
-      <button class="mode-btn" data-mode="cover">🔍 Cover</button>
-      <button class="mode-btn" data-mode="fill">↔️ Stretch</button>
-      <button class="mode-btn" data-mode="16:9">📺 16:9</button>
-      <button class="mode-btn" data-mode="full">⛶ เต็มจอ</button>
+  <!-- 📌 แถบด้านบน -->
+  <div class="header-bar" id="mainHeader">
+    <div class="header-left">
+      <button class="menu-btn" id="menuBtn">☰</button>
+      <div>
+        <div class="app-title">📺 ต้นทีวีออนไลน์</div>
+        <div class="app-sub">รองรับ M3U / JSON / W3U — สลับกริด/รายการได้</div>
+      </div>
     </div>
   </div>
 
-  <!-- ===== 📋 ฟอร์ม ===== -->
-  <div class="form-card">
-    <!-- แท็บ: เล่นตรง / โหลดเพลย์ลิสต์ -->
-    <div class="tabs">
-      <div class="tab" data-tab="direct">▶ เล่นตรง</div>
-      <div class="tab active" data-tab="playlist">📋 เพลย์ลิสต์</div>
+  <!-- ↩️ แถบย้อนกลับ (ซ่อนก่อน) -->
+  <div class="back-header hidden" id="backHeader">
+    <button class="back-icon" id="backBtn">←</button>
+    <div class="back-title" id="backTitle">เพลย์ลิสต์</div>
+  </div>
+
+  <!-- 📋 ส่วนเพิ่มเพลย์ลิสต์ -->
+  <div class="add-section" id="addSection">
+    <div class="section-title">📂 เพิ่มเพลย์ลิสต์ใหม่</div>
+    <input type="text" class="input-field" id="urlInput" placeholder="วางลิงก์ URL ที่นี่... (รองรับ .m3u / .json / .w3u)">
+    <div class="file-row">
+      <button class="file-btn" id="selectFileBtn">📁 ไฟล์ในเครื่อง</button>
+      <input type="file" id="fileInput" accept=".m3u,.m3u8,.json,.w3u">
+      <button class="file-btn" id="scanQrBtn">📷 สแกน QR</button>
     </div>
+    <button class="primary-btn" id="loadBtn" style="margin-top: 16px;">✅ นำเข้าเพลย์ลิสต์</button>
+  </div>
 
-    <!-- ===== แท็บ 1: เล่นตรง ===== -->
-    <div class="tab-content" id="tab-direct">
-      <div class="section-title">เลือกประเภทลิงก์ (Type)</div>
-      <div class="type-bar">
-        <button class="type-btn" data-type="play">play</button>
-        <button class="type-btn active" data-type="web_url">web_url</button>
-        <button class="type-btn" data-type="m3u8">m3u8</button>
-        <button class="type-btn" data-type="mp4">mp4</button>
-        <button class="type-btn" data-type="mpd">mpd</button>
-      </div>
-
-      <div class="input-group">
-        <label class="label">🔗 ลิงก์วิดีโอ (URL)</label>
-        <div class="input-wrap">
-          <input type="text" class="input-field" id="urlInput" placeholder="วางลิงก์ที่นี่...">
-          <button class="paste-btn" id="pasteUrlBtn">วาง</button>
-        </div>
-      </div>
-
-      <div class="input-group">
-        <label class="label">Referer (ถ้ามี)</label>
-        <div class="input-wrap">
-          <input type="text" class="input-field" id="refererInput" placeholder="https://example.com">
-          <button class="paste-btn" id="pasteRefBtn">วาง</button>
-        </div>
-      </div>
-
-      <button class="play-btn" id="testBtn">
-        <span>▶</span> ทดสอบเล่น
-      </button>
-    </div>
-
-    <!-- ===== แท็บ 2: โหลดเพลย์ลิสต์ — รองรับ .m3u / .json / .w3u ===== -->
-    <div class="tab-content active" id="tab-playlist">
-      <div class="section-title">📂 โหลดเพลย์ลิสต์ — รองรับ .m3u / .json / .w3u</div>
-      
-      <!-- อัปโหลดไฟล์ -->
-      <div class="file-row">
-        <button class="file-btn" id="selectFileBtn">📂 เลือกไฟล์ในเครื่อง</button>
-        <input type="file" id="fileInput" accept=".m3u,.m3u8,.json,.w3u">
-      </div>
-
-      <div class="section-title" style="margin-top: 16px;">🔗 หรือใส่ลิงก์ไฟล์</div>
-      <div class="input-group">
-        <div class="input-wrap">
-          <input type="text" class="input-field" id="m3uUrlInput" placeholder="https://example.com/playlist.m3u / .json / .w3u">
-          <button class="paste-btn" id="pasteM3uBtn">วาง</button>
-        </div>
-      </div>
-
-      <button class="play-btn" id="loadM3uBtn">
-        <span>📥</span> โหลดเพลย์ลิสต์
-      </button>
-    </div>
-
-    <!-- สถานะ -->
-    <div class="status" id="status"></div>
-
-    <!-- ปุ่มเปิดภายนอก -->
-    <div class="ext-bar" id="extBar" style="display: none;">
-      <button class="ext-btn ext-open" id="openInAppBtn">📱 เปิดในแอปอื่น</button>
-      <button class="ext-btn ext-copy" id="copyBtn">📋 คัดลอก</button>
+  <!-- 🔍 ค้นหา + สลับโหมด -->
+  <div class="top-controls" id="listControls" style="display: none;">
+    <input type="text" class="search-box" id="searchInput" placeholder="ค้นหาช่อง...">
+    <div class="view-toggle">
+      <button class="view-btn active" data-view="grid">⊞</button>
+      <button class="view-btn" data-view="list">☰</button>
     </div>
   </div>
 
-  <!-- ===== 📋 รายการช่อง — ไม่หายเมื่อกดเล่น! ===== -->
-  <div class="playlist-box" id="playlistBox">
-    <div class="playlist-title">📋 รายการช่อง <span id="chCount"></span></div>
-    
-    <!-- 📂 หมวดหมู่ -->
-    <div class="category-bar" id="categoryBar">
-      <button class="category-btn category-all active" data-category="all">📺 ทุกช่อง</button>
-    </div>
-    
-    <div id="channelsList"></div>
+  <!-- 📂 หมวดหมู่ -->
+  <div class="category-scroll" id="categoryScroll" style="display: none;">
+    <button class="cat-chip active" data-category="all">📺 ทั้งหมด</button>
   </div>
-</div>
+
+  <!-- 📋 รายการช่อง — โหมดกริด + โหมดรายการ -->
+  <div class="content-container" id="contentContainer" style="display: none;">
+    <!-- โหมดกริด -->
+    <div class="grid-container active" id="gridContainer">
+      <div class="grid-view" id="gridView"></div>
+    </div>
+    <!-- โหมดรายการ -->
+    <div class="list-container" id="listContainer">
+      <div class="list-view" id="listView"></div>
+    </div>
+    <!-- ว่าง -->
+    <div class="empty-state" id="emptyState" style="display: none;">
+      <div class="empty-icon">📺</div>
+      <div>ไม่พบรายการช่อง</div>
+    </div>
+  </div>
+
+  <!-- 🎬 เครื่องเล่นด้านล่าง -->
+  <div class="player-container" id="playerContainer">
+    <div class="video-wrapper">
+      <video id="video" controls playsinline preload="metadata" style="width:100%;height:100%;display:none;"></video>
+      <iframe id="webIframe" style="width:100%;height:100%;display:none;border:none;" allow="autoplay; fullscreen"></iframe>
+    </div>
+    <div class="player-actions">
+      <button class="action-btn btn-exo" id="exoBtn">▶ ExoPlayer</button>
+      <button class="action-btn btn-app" id="appBtn">📱 แอปอื่น</button>
+      <button class="action-btn btn-copy" id="copyBtn">📋 คัดลอก</button>
+    </div>
+  </div>
+
+  <!-- 💬 ข้อความแจ้งเตือน -->
+  <div class="toast" id="toast"></div>
 
 <script>
 // ==============================================
 // 🎯 ตัวแปรหลัก
 // ==============================================
+let allChannels = [];
+let filteredChannels = [];
+let categories = [];
+let currentCategory = 'all';
+let currentView = 'grid'; // grid หรือ list
+let currentPlaying = null;
+let hls = null, dashPlayer = null;
+let currentUrl = '', currentReferer = '';
+
 const video = document.getElementById('video');
 const webIframe = document.getElementById('webIframe');
-const videoBox = document.getElementById('videoBox');
-const backBtn = document.getElementById('backBtn');
-const status = document.getElementById('status');
-const playlistBox = document.getElementById('playlistBox');
-const categoryBar = document.getElementById('categoryBar');
-const channelsList = document.getElementById('channelsList');
-
-let hls = null, dashPlayer = null;
-let currentType = 'web_url';
-let currentUrl = '';
-let allChannels = [];
-let categories = [];
-let activeCategory = 'all';
-let playingIndex = -1;
+const playerContainer = document.getElementById('playerContainer');
+const toast = document.getElementById('toast');
 
 // ==============================================
-// ↩️ ปุ่มย้อนกลับ — กลับไปหน้าแรก
+// 💬 แจ้งเตือน
 // ==============================================
-backBtn.addEventListener('click', () => {
+function showToast(msg, duration = 2500) {
+  toast.textContent = msg; toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), duration);
+}
+
+// ==============================================
+// 🔙 ปุ่มย้อนกลับ
+// ==============================================
+document.getElementById('backBtn').addEventListener('click', () => {
   stopAll();
-  videoBox.style.display = 'none';
-  playlistBox.classList.remove('show');
-  backBtn.classList.add('hidden');
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.querySelector('[data-tab="playlist"]').classList.add('active');
-  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-  document.getElementById('tab-playlist').classList.add('active');
+  playerContainer.classList.remove('show');
+  document.getElementById('backHeader').classList.add('hidden');
+  document.getElementById('mainHeader').classList.remove('hidden');
+  document.getElementById('addSection').style.display = 'block';
+  document.getElementById('listControls').style.display = 'none';
+  document.getElementById('categoryScroll').style.display = 'none';
+  document.getElementById('contentContainer').style.display = 'none';
   allChannels = [];
-  channelsList.innerHTML = '';
-  showStatus('✅ กลับไปหน้าแรกแล้ว', 'ok');
+  showToast('✅ กลับไปหน้าแรก');
 });
 
 // ==============================================
-// 📱 สลับแท็บ
+// 🔄 สลับโหมด กริด / รายการ
 // ==============================================
-document.querySelectorAll('.tab').forEach(tab => {
-  tab.addEventListener('click', () => {
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    tab.classList.add('active');
-    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-    document.getElementById(`tab-${tab.dataset.tab}`).classList.add('active');
-  });
-});
-
-// ==============================================
-// 📐 ปรับโหมดภาพ
-// ==============================================
-document.querySelectorAll('.mode-btn').forEach(btn => {
+document.querySelectorAll('.view-btn').forEach(btn => {
   btn.addEventListener('click', () => {
-    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    setMode(btn.dataset.mode);
+    currentView = btn.dataset.view;
+    
+    if (currentView === 'grid') {
+      document.getElementById('gridContainer').classList.add('active');
+      document.getElementById('listContainer').classList.remove('active');
+    } else {
+      document.getElementById('gridContainer').classList.remove('active');
+      document.getElementById('listContainer').classList.add('active');
+    }
+    renderCurrentView();
   });
 });
 
-function setMode(mode) {
-  video.style.objectFit = 'contain';
-  document.getElementById('videoWrap').style.aspectRatio = '16/9';
+// ==============================================
+// 🔍 ค้นหา
+// ==============================================
+document.getElementById('searchInput').addEventListener('input', (e) => {
+  const q = e.target.value.toLowerCase().trim();
+  filteredChannels = allChannels.filter(ch => 
+    ch.name.toLowerCase().includes(q) || 
+    (ch.group && ch.group.toLowerCase().includes(q))
+  );
+  renderCurrentView();
+});
 
-  switch(mode) {
-    case 'contain': video.style.objectFit = 'contain'; break;
-    case 'cover': video.style.objectFit = 'cover'; break;
-    case 'fill': video.style.objectFit = 'fill'; break;
-    case '16:9': video.style.objectFit = 'contain'; break;
-    case 'full':
-      video.style.objectFit = 'cover';
-      if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(() => {});
-      break;
-  }
+// ==============================================
+// 📂 เลือกหมวดหมู่
+// ==============================================
+function renderCategories() {
+  const scroll = document.getElementById('categoryScroll');
+  scroll.innerHTML = `<button class="cat-chip active" data-category="all">📺 ทั้งหมด</button>`;
+  categories.forEach(cat => {
+    const btn = document.createElement('button');
+    btn.className = 'cat-chip';
+    btn.textContent = cat;
+    btn.dataset.category = cat;
+    btn.addEventListener('click', () => selectCategory(cat));
+    scroll.appendChild(btn);
+  });
+  scroll.querySelector('[data-category="all"]').addEventListener('click', () => selectCategory('all'));
+}
+
+function selectCategory(cat) {
+  currentCategory = cat;
+  document.querySelectorAll('.cat-chip').forEach(b => b.classList.remove('active'));
+  document.querySelector(`[data-category="${cat}"]`).classList.add('active');
+  
+  if (cat === 'all') filteredChannels = [...allChannels];
+  else filteredChannels = allChannels.filter(ch => ch.group === cat);
+  
+  renderCurrentView();
 }
 
 // ==============================================
-// 📋 เลือกประเภทลิงก์
+// 📋 แสดงผล — เลือกโหมดอัตโนมัติ
 // ==============================================
-document.querySelectorAll('.type-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    currentType = btn.dataset.type;
-  });
-});
-
-// ==============================================
-// 📋 ปุ่มวางข้อมูล
-// ==============================================
-async function pasteTo(inputId) {
-  try {
-    const text = await navigator.clipboard.readText();
-    document.getElementById(inputId).value = text.trim();
-    showStatus('✅ วางข้อมูลแล้ว', 'ok');
-  } catch (e) {
-    showStatus('⚠️ ไม่สามารถอ่านคลิปบอร์ดได้', 'warn');
+function renderCurrentView() {
+  const gridView = document.getElementById('gridView');
+  const listView = document.getElementById('listView');
+  const emptyState = document.getElementById('emptyState');
+  
+  if (filteredChannels.length === 0) {
+    gridView.innerHTML = '';
+    listView.innerHTML = '';
+    emptyState.style.display = 'block';
+    return;
   }
+  emptyState.style.display = 'none';
+  
+  // โหมดกริด
+  gridView.innerHTML = filteredChannels.map((ch, idx) => `
+    <div class="grid-card" data-index="${idx}" data-url="${encodeURIComponent(ch.url)}" data-referer="${encodeURIComponent(ch.referer||'')}">
+      <div class="card-image-wrap">
+        ${ch.logo ? `<img src="${ch.logo}" class="card-image" alt="${ch.name}" loading="lazy" onerror="this.style.display='none'">` : `<span class="card-placeholder">📺</span>`}
+      </div>
+      <div class="card-body">
+        <div class="card-title">${ch.name}</div>
+        <div class="card-meta">${ch.group || 'ทั่วไป'}</div>
+        <div class="card-badge">▶ เล่น</div>
+      </div>
+    </div>
+  `).join('');
+  
+  // โหมดรายการ
+  listView.innerHTML = filteredChannels.map((ch, idx) => `
+    <div class="list-item" data-index="${idx}" data-url="${encodeURIComponent(ch.url)}" data-referer="${encodeURIComponent(ch.referer||'')}">
+      <div class="list-thumb">
+        ${ch.logo ? `<img src="${ch.logo}" alt="${ch.name}" loading="lazy" onerror="this.style.display='none'">` : `<span style="font-size:24px;">📺</span>`}
+      </div>
+      <div class="list-info">
+        <div class="list-name">${ch.name}</div>
+        <div class="list-desc">${ch.group || 'ทั่วไป'}</div>
+      </div>
+      <span class="list-arrow">›</span>
+    </div>
+  `).join('');
+  
+  // ผูกเหตุการณ์คลิก
+  document.querySelectorAll('.grid-card, .list-item').forEach(el => {
+    el.addEventListener('click', () => {
+      const url = decodeURIComponent(el.dataset.url);
+      const ref = decodeURIComponent(el.dataset.referer || '');
+      playChannel(url, ref);
+      
+      // ไฮไลท์รายการที่เล่น
+      document.querySelectorAll('.grid-card, .list-item').forEach(e => e.classList.remove('selected'));
+      el.classList.add('selected');
+    });
+  });
 }
-document.getElementById('pasteUrlBtn').addEventListener('click', () => pasteTo('urlInput'));
-document.getElementById('pasteRefBtn').addEventListener('click', () => pasteTo('refererInput'));
-document.getElementById('pasteM3uBtn').addEventListener('click', () => pasteTo('m3uUrlInput'));
 
 // ==============================================
-// 📂 เลือกไฟล์ในเครื่อง — รองรับ .m3u / .json / .w3u
+// 📂 โหลดไฟล์ในเครื่อง
 // ==============================================
 document.getElementById('selectFileBtn').addEventListener('click', () => {
   document.getElementById('fileInput').click();
@@ -409,95 +476,72 @@ document.getElementById('selectFileBtn').addEventListener('click', () => {
 document.getElementById('fileInput').addEventListener('change', (e) => {
   const file = e.target.files[0];
   if (!file) return;
-
-  showStatus('⏳ กำลังอ่านไฟล์...', 'warn');
   const reader = new FileReader();
-  
   reader.onload = (event) => {
-    const content = event.target.result;
-    let channels = [];
-
-    // ตรวจสอบประเภทไฟล์
-    if (file.name.endsWith('.m3u') || file.name.endsWith('.m3u8')) {
-      channels = parseM3U(content);
-    } else if (file.name.endsWith('.json')) {
-      channels = parseJSON(content);
-    } else if (file.name.endsWith('.w3u')) {
-      channels = parseW3U(content);
-    } else {
-      // ลองทุกแบบ
-      channels = parseM3U(content);
-      if (!channels.length) channels = parseJSON(content);
-      if (!channels.length) channels = parseW3U(content);
-    }
-
-    if (channels.length > 0) {
-      allChannels = channels;
-      categories = [...new Set(allChannels.map(c => c.group))].sort();
-      renderCategories();
-      renderChannels();
-      playlistBox.classList.add('show');
-      backBtn.classList.remove('hidden');
-      showStatus(`✅ โหลดสำเร็จ! ${channels.length} ช่อง`, 'ok');
-    } else {
-      showStatus('❌ ไม่สามารถอ่านไฟล์ได้', 'err');
-    }
+    parseAndLoad(event.target.result, file.name);
   };
   reader.readAsText(file);
   e.target.value = '';
 });
 
 // ==============================================
-// 📥 โหลด M3U/JSON/W3U จากลิงก์
+// 🔗 โหลดจากลิงก์
 // ==============================================
-document.getElementById('loadM3uBtn').addEventListener('click', async () => {
-  const url = document.getElementById('m3uUrlInput').value.trim();
-  if (!url) return showStatus('⚠️ กรุณาใส่ลิงก์ไฟล์', 'err');
+document.getElementById('loadBtn').addEventListener('click', async () => {
+  const url = document.getElementById('urlInput').value.trim();
+  if (!url) return showToast('⚠️ กรุณาใส่ลิงก์หรือเลือกไฟล์', 3000);
   
-  showStatus('⏳ กำลังโหลดเพลย์ลิสต์...', 'warn');
-  
+  showToast('⏳ กำลังโหลด...', 5000);
   try {
     const res = await fetch(url);
     if (!res.ok) throw new Error('Load failed');
     const text = await res.text();
-    
-    let channels = [];
-    if (url.includes('.m3u') || url.includes('.m3u8')) {
-      channels = parseM3U(text);
-    } else if (url.includes('.json')) {
-      channels = parseJSON(text);
-    } else if (url.includes('.w3u')) {
-      channels = parseW3U(text);
-    } else {
-      channels = parseM3U(text);
-      if (!channels.length) channels = parseJSON(text);
-      if (!channels.length) channels = parseW3U(text);
-    }
-
-    if (channels.length > 0) {
-      allChannels = channels;
-      categories = [...new Set(allChannels.map(c => c.group))].sort();
-      renderCategories();
-      renderChannels();
-      playlistBox.classList.add('show');
-      backBtn.classList.remove('hidden');
-      showStatus(`✅ โหลดสำเร็จ! ${channels.length} ช่อง`, 'ok');
-    } else {
-      showStatus('❌ ไม่พบรายการช่องในไฟล์', 'err');
-    }
-  } catch (e) {
-    console.error(e);
-    showStatus('⚠️ ถูกบล็อก CORS — ลองใช้ไฟล์ในเครื่องแทน', 'err');
+    parseAndLoad(text, url);
+  } catch (err) {
+    showToast('❌ โหลดไม่สำเร็จ — ลองใช้ไฟล์ในเครื่องแทน', 3500);
   }
 });
 
 // ==============================================
-// 🔧 PARSE M3U
+// 🔧 แปลงข้อมูลทุกประเภท
 // ==============================================
+function parseAndLoad(text, sourceName) {
+  let channels = [];
+  
+  if (sourceName.includes('.m3u') || sourceName.includes('.m3u8')) {
+    channels = parseM3U(text);
+  } else if (sourceName.includes('.json') || sourceName.includes('.w3u')) {
+    channels = parseJSON(text);
+  } else {
+    channels = parseM3U(text);
+    if (!channels.length) channels = parseJSON(text);
+  }
+  
+  if (!channels.length) return showToast('❌ ไม่พบรายการช่อง', 3000);
+  
+  allChannels = channels;
+  filteredChannels = [...allChannels];
+  categories = [...new Set(allChannels.map(c => c.group || 'ทั่วไป'))].sort();
+  
+  // แสดงผลส่วนรายการ
+  document.getElementById('addSection').style.display = 'none';
+  document.getElementById('mainHeader').classList.add('hidden');
+  document.getElementById('backHeader').classList.remove('hidden');
+  document.getElementById('backTitle').textContent = `พบ ${allChannels.length} ช่อง`;
+  document.getElementById('listControls').style.display = 'flex';
+  document.getElementById('categoryScroll').style.display = 'flex';
+  document.getElementById('contentContainer').style.display = 'block';
+  
+  renderCategories();
+  renderCurrentView();
+  showToast(`✅ โหลดสำเร็จ! ${allChannels.length} ช่อง`, 2500);
+}
+
+// PARSE M3U
 function parseM3U(text) {
   const channels = [];
   const lines = text.split('\n');
-  let ch = { name: '', url: '', logo: '', group: 'ทั่วไป' };
+  let ch = { name: '', url: '', logo: '', group: 'ทั่วไป', referer: '' };
   
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim();
@@ -505,315 +549,576 @@ function parseM3U(text) {
       const nameMatch = line.match(/,(.+)$/);
       const logoMatch = line.match(/tvg-logo="([^"]*)"/);
       const groupMatch = line.match(/group-title="([^"]*)"/);
+      
       ch = {
         name: nameMatch ? nameMatch[1].trim() : 'ไม่ระบุ',
         logo: logoMatch ? logoMatch[1] : '',
         group: groupMatch ? groupMatch[1].trim() : 'ทั่วไป',
-        url: ''
+        url: '', referer: ''
       };
     } else if (line && !line.startsWith('#') && line.startsWith('http')) {
-      ch.url = line;
+      let url = line;
+      let referer = '';
+      if (url.includes('|referer=')) {
+        const parts = url.split('|referer=');
+        url = parts[0];
+        referer = parts[1] || '';
+      }
+      ch.url = url;
+      ch.referer = referer;
       channels.push({ ...ch });
-      ch = { name: '', url: '', logo: '', group: 'ทั่วไป' };
+      ch = { name: '', url: '', logo: '', group: 'ทั่วไป', referer: '' };
     }
   }
   return channels;
 }
 
-// ==============================================
-// 🔧 PARSE JSON — รองรับ .json
-// ==============================================
+// PARSE JSON / W3U
 function parseJSON(text) {
   try {
-    const data = JSON.parse(text);
-    const channels = [];
+    const d = JSON.parse(text);
+    const chs = [];
     
-    if (Array.isArray(data)) {
-      data.forEach(item => {
-        channels.push({
-          name: item.name || item.title || 'ไม่มีชื่อ',
-          url: item.url || item.link || item.src || '',
-          logo: item.image || item.logo || '',
-          group: item.group || item.groupTitle || 'ทั่วไป'
+    if (Array.isArray(d)) {
+      d.forEach(i => {
+        chs.push({
+          name: i.name || i.title || 'ไม่มีชื่อ',
+          url: i.url || i.link || i.src || '',
+          logo: i.image || i.logo || '',
+          group: i.group || i.groupTitle || 'ทั่วไป',
+          referer: i.referer || ''
         });
       });
-    } else if (data.groups && Array.isArray(data.groups)) {
-      data.groups.forEach(group => {
-        if (group.stations && Array.isArray(group.stations)) {
-          group.stations.forEach(station => {
-            channels.push({
-              name: station.name || 'ไม่มีชื่อ',
-              url: station.url || station.link || '',
-              logo: station.image || group.image || '',
-              group: group.name || 'ทั่วไป'
-            });
+    } else if (d.groups?.length) {
+      d.groups.forEach(g => {
+        g.stations?.forEach(s => {
+          chs.push({
+            name: s.name || 'ไม่มีชื่อ',
+            url: s.url || s.link || '',
+            logo: s.image || g.image || '',
+            group: g.name || 'ทั่วไป',
+            referer: s.referer || ''
           });
-        }
+        });
       });
-    } else if (data.channels && Array.isArray(data.channels)) {
-      data.channels.forEach(item => {
-        channels.push({
-          name: item.name || item.title || 'ไม่มีชื่อ',
-          url: item.url || item.link || '',
-          logo: item.logo || item.image || '',
-          group: item.group || 'ทั่วไป'
+    } else if (d.channels?.length) {
+      d.channels.forEach(i => {
+        chs.push({
+          name: i.name || 'ไม่มีชื่อ',
+          url: i.url || '',
+          logo: i.logo || '',
+          group: i.group || 'ทั่วไป',
+          referer: i.referer || ''
         });
       });
     }
-    return channels;
-  } catch (e) {
-    console.error('JSON Parse Error:', e);
+    return chs;
+  } catch {
     return [];
   }
 }
 
 // ==============================================
-// 🔧 PARSE W3U — รองรับ .w3u
+// 🎬 เล่นวิดีโอ
 // ==============================================
-function parseW3U(text) {
-  try {
-    const data = JSON.parse(text);
-    const channels = [];
-    
-    if (data.groups && Array.isArray(data.groups)) {
-      data.groups.forEach(group => {
-        if (group.stations && Array.isArray(group.stations)) {
-          group.stations.forEach(station => {
-            channels.push({
-              name: station.name || 'ไม่มีชื่อ',
-              url: station.url || station.link || '',
-              logo: station.image || group.image || data.image || '',
-              group: group.name || 'ทั่วไป'
-            });
-          });
-        }
-      });
-    } else {
-      return parseJSON(text);
-    }
-    return channels;
-  } catch (e) {
-    console.error('W3U Parse Error:', e);
-    return [];
-  }
-}
-
-// ==============================================
-// 📂 แสดงหมวดหมู่
-// ==============================================
-function renderCategories() {
-  categoryBar.innerHTML = `<button class="category-btn category-all active" data-category="all">📺 ทุกช่อง</button>`;
-  
-  categories.forEach(cat => {
-    const btn = document.createElement('button');
-    btn.className = 'category-btn';
-    btn.textContent = cat;
-    btn.dataset.category = cat;
-    btn.addEventListener('click', () => filterByCategory(cat));
-    categoryBar.appendChild(btn);
-  });
-  
-  document.querySelector('.category-all').onclick = () => filterByCategory('all');
-}
-
-function filterByCategory(cat) {
-  activeCategory = cat;
-  document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
-  document.querySelector(`[data-category="${cat}"]`).classList.add('active');
-  
-  channelsList.querySelectorAll('.ch-item').forEach((item, idx) => {
-    const ch = allChannels[idx];
-    if (cat === 'all' || ch.group === cat) item.classList.remove('hidden');
-    else item.classList.add('hidden');
-  });
-}
-
-// ==============================================
-// 📋 แสดงรายการช่อง
-// ==============================================
-function renderChannels() {
-  document.getElementById('chCount').textContent = `(${allChannels.length} ช่อง)`;
-  channelsList.innerHTML = '';
-  
-  allChannels.forEach((ch, idx) => {
-    const item = document.createElement('div');
-    item.className = 'ch-item';
-    item.textContent = ch.name;
-    item.dataset.index = idx;
-    item.onclick = () => playChannel(idx);
-    channelsList.appendChild(item);
-  });
-}
-
-// ==============================================
-// 🎬 เล่นช่อง — เพลย์ลิสต์ไม่หาย!
-// ==============================================
-function playChannel(index) {
-  playingIndex = index;
-  const ch = allChannels[index];
-  
-  // ✅ ไม่เปลี่ยนแท็บ — รายการยังคงอยู่!
-  document.querySelectorAll('.ch-item').forEach((item, idx) => {
-    item.classList.toggle('playing', idx === index);
-  });
-  
-  document.getElementById('urlInput').value = ch.url;
-  currentUrl = ch.url;
-  
+function playChannel(url, referer = '') {
   stopAll();
-  videoBox.style.display = 'block';
-  document.getElementById('extBar').style.display = 'grid';
-  
-  autoDetectAndPlay(ch.url);
-}
-
-// ==============================================
-// ▶️ ทดสอบเล่น — เล่นตรง
-// ==============================================
-document.getElementById('testBtn').addEventListener('click', () => {
-  const url = document.getElementById('urlInput').value.trim();
-  const referer = document.getElementById('refererInput').value.trim();
-  if (!url) return showStatus('⚠️ กรุณาใส่ลิงก์ URL', 'err');
-
   currentUrl = url;
-  stopAll();
-  videoBox.style.display = 'block';
-  document.getElementById('extBar').style.display = 'grid';
-
-  switch (currentType) {
-    case 'web_url': playWebUrl(url); break;
-    case 'play': case 'm3u8': playHLS(url, referer); break;
-    case 'mp4': playMP4(url); break;
-    case 'mpd': playDASH(url); break;
-    default: autoDetectAndPlay(url, referer);
-  }
-});
-
-// ==============================================
-// 🌐 เล่น web_url
-// ==============================================
-function playWebUrl(url) {
-  video.style.display = 'none';
-  webIframe.style.display = 'block';
-  webIframe.src = url;
-  showStatus('✅ กำลังโหลดหน้าเว็บ...', 'ok');
-}
-
-// ==============================================
-// 🔄 ตรวจอัตโนมัติ
-// ==============================================
-function autoDetectAndPlay(url, referer = '') {
+  currentReferer = referer;
+  
+  playerContainer.classList.add('show');
+  showToast('⏳ กำลังโหลด...', 2000);
+  
   const u = url.toLowerCase();
-  if (u.includes('.m3u8')) { playHLS(url, referer); }
-  else if (u.includes('.mpd')) { playDASH(url); }
-  else if (u.includes('.mp4') || u.includes('.webm')) { playMP4(url); }
-  else { playWebUrl(url); }
+  if (u.includes('.m3u8')) {
+    playHLS(url, referer);
+  } else if (u.includes('.mpd')) {
+    playDASH(url);
+  } else if (u.includes('.mp4') || u.includes('.webm')) {
+    playMP4(url);
+  } else {
+    playWeb(url);
+  }
 }
 
-// ==============================================
-// 🎬 เล่น HLS (.m3u8)
-// ==============================================
-function playHLS(url, referer = '') {
-  video.style.display = 'block';
-  webIframe.style.display = 'none';
-
+function playHLS(url, ref = '') {
+  video.style.display = 'block'; webIframe.style.display = 'none';
   if (video.canPlayType('application/vnd.apple.mpegurl')) {
     video.src = url;
-    video.play().then(() => showStatus('✅ กำลังเล่น (Native HLS)', 'ok')).catch(() => showStatus('⚠️ คลิกเพื่อเริ่มเล่น', 'warn'));
+    video.play().then(() => showToast('✅ กำลังเล่น', 1500));
     return;
   }
-
   if (Hls.isSupported()) {
-    hls = new Hls({ maxBufferLength: 30, maxMaxBufferLength: 60,
-      xhrSetup: (xhr) => { if (referer) xhr.setRequestHeader('Referer', referer); }
-    });
+    hls = new Hls({ maxBufferLength: 30 });
     hls.loadSource(url);
     hls.attachMedia(video);
     hls.on(Hls.Events.MANIFEST_PARSED, () => {
-      showStatus('✅ กำลังเล่น (HLS.js)', 'ok');
       video.play().catch(() => {});
+      showToast('✅ กำลังเล่น', 1500);
     });
-    hls.on(Hls.Events.ERROR, (_, data) => {
-      if (data.fatal) showStatus('❌ เล่นไม่ได้ — ลิงก์อาจหมดอายุ', 'err');
-    });
-  } else {
-    showStatus('❌ เบราว์เซอร์ไม่รองรับ HLS', 'err');
   }
 }
 
-// ==============================================
-// 🎬 เล่น DASH (.mpd)
-// ==============================================
 function playDASH(url) {
-  video.style.display = 'block';
-  webIframe.style.display = 'none';
-
+  video.style.display = 'block'; webIframe.style.display = 'none';
   dashPlayer = dashjs.MediaPlayer().create();
   dashPlayer.initialize(video, url, true);
-  dashPlayer.on('streamInitialized', () => showStatus('✅ กำลังเล่น DASH', 'ok'));
+  showToast('✅ กำลังเล่น', 1500);
 }
 
-// ==============================================
-// 🎬 เล่น MP4
-// ==============================================
 function playMP4(url) {
-  video.style.display = 'block';
-  webIframe.style.display = 'none';
+  video.style.display = 'block'; webIframe.style.display = 'none';
   video.src = url;
-  video.play().then(() => showStatus('✅ กำลังเล่น MP4', 'ok'));
+  video.play().then(() => showToast('✅ กำลังเล่น', 1500));
 }
 
-// ==============================================
-// 🛑 หยุดทุกอย่าง
-// ==============================================
+function playWeb(url) {
+  video.style.display = 'none'; webIframe.style.display = 'block';
+  webIframe.src = url;
+  showToast('✅ กำลังโหลดหน้าเว็บ', 1500);
+}
+
 function stopAll() {
   if (hls) { hls.destroy(); hls = null; }
   if (dashPlayer) { dashPlayer.reset(); dashPlayer = null; }
-  video.removeAttribute('src');
-  video.load();
+  video.removeAttribute('src'); video.load();
   webIframe.src = 'about:blank';
 }
 
 // ==============================================
-// 📱 เปิดในแอปอื่น
+// 📱 เปิดในแอปภายนอก
 // ==============================================
-document.getElementById('openInAppBtn').addEventListener('click', () => {
-  let url = currentUrl || document.getElementById('urlInput').value.trim();
-  if (!url) return alert('⚠️ ไม่มีลิงก์วิดีโอครับ');
-
-  const cleanUrl = decodeURIComponent(url).split('|')[0].split('#')[0];
-  window.location.href = `intent:${encodeURI(cleanUrl)}#Intent;action=android.intent.action.VIEW;type=video/*;end`;
-
-  setTimeout(() => {
-    if (confirm('❌ ไม่มีแอปเปิดได้ คัดลอกลิงก์ไปวางในแอปเองไหม?')) {
-      navigator.clipboard.writeText(cleanUrl);
-      alert('✅ คัดลอกแล้วครับ!');
-    }
-  }, 1200);
+document.getElementById('exoBtn').addEventListener('click', () => {
+  if (!currentUrl) return showToast('⚠️ ไม่มีลิงก์', 2000);
+  let url = currentUrl;
+  if (currentReferer && !url.includes('|referer=')) url += `|referer=${currentReferer}`;
+  
+  const intentUrl = `intent:${encodeURI(currentUrl)}#Intent;action=android.intent.action.VIEW;type=video/*;package=com.google.android.exoplayer2.dev;S.userAgent=exo_player;S.referer=${encodeURIComponent(currentReferer)};end`;
+  window.location.href = intentUrl;
+  showToast('📱 เปิด ExoPlayer...', 1500);
 });
 
-// ==============================================
-// 📋 ปุ่มคัดลอกลิงก์
-// ==============================================
+document.getElementById('appBtn').addEventListener('click', () => {
+  if (!currentUrl) return showToast('⚠️ ไม่มีลิงก์', 2000);
+  let url = currentUrl;
+  if (currentReferer && !url.includes('|referer=')) url += `|referer=${currentReferer}`;
+  const cleanUrl = decodeURIComponent(url).split('|referer=')[0];
+  window.location.href = `intent:${encodeURI(cleanUrl)}#Intent;action=android.intent.action.VIEW;type=video/*;end`;
+  showToast('📱 เลือกแอป...', 1500);
+});
+
 document.getElementById('copyBtn').addEventListener('click', () => {
-  const url = currentUrl || document.getElementById('urlInput').value.trim();
-  if (!url) return alert('⚠️ ไม่มีลิงก์ให้คัดลอกครับ');
+  if (!currentUrl) return showToast('⚠️ ไม่มีลิงก์', 2000);
+  let url = currentUrl;
+  if (currentReferer && !url.includes('|referer=')) url += `|referer=${currentReferer}`;
   navigator.clipboard.writeText(url).then(() => {
-    const btn = document.getElementById('copyBtn');
-    btn.classList.add('copied');
-    btn.innerHTML = '✅ คัดลอก!';
-    setTimeout(() => { btn.classList.remove('copied'); btn.innerHTML = '📋 คัดลอก'; }, 2000);
+    showToast('✅ คัดลอกแล้ว!', 2000);
   });
 });
 
-// ==============================================
-// 📊 แสดงสถานะ
-// ==============================================
-function showStatus(text, type = 'ok') {
-  status.textContent = text;
-  status.className = `status show ${type}`;
-  if (type === 'ok') setTimeout(() => status.classList.remove('show'), 8000);
-}
+// สแกน QR (ตัวอย่าง)
+document.getElementById('scanQrBtn').addEventListener('click', () => {
+  showToast('📷 ฟีเจอร์สแกน QR — เพิ่มเติมได้ครับ', 2500);
+});
 </script>
-</body>
-</html>
+  
+
+
+<head>
+
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="profile" href="https://gmpg.org/xfn/11"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin=""><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;600;700&amp;display=swap" rel="stylesheet"><link rel="dns-prefetch" href="//cdnjs.cloudflare.com"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/fontawesome.min.css" integrity="sha512-P9vJUXK+LyvAzj8otTOKzdfF1F3UYVl13+F8Fof8/2QNb8Twd6Vb+VD52I7+87tex9UXxnzPgWA3rH96RExA7A==" crossorigin="anonymous" referrerpolicy="no-referrer"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/regular.min.css" integrity="sha512-d2x1oQUT6HACW9UlXxWI6XrIBDrEE5z2tit/+kWEdXdVYuift7sm+Q6ucfGWQr1F0+GD9/6eYoYDegw2nm05Vw==" crossorigin="anonymous" referrerpolicy="no-referrer"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/solid.min.css" integrity="sha512-tk4nGrLxft4l30r9ETuejLU0a3d7LwMzj0eXjzc16JQj+5U1IeVoCuGLObRDc3+eQMUcEQY1RIDPGvuA7SNQ2w==" crossorigin="anonymous" referrerpolicy="no-referrer"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/brands.min.css" integrity="sha512-sVSECYdnRMezwuq5uAjKQJEcu2wybeAPjU4VJQ9pCRcCY4pIpIw4YMHIOQ0CypfwHRvdSPbH++dA3O4Hihm/LQ==" crossorigin="anonymous" referrerpolicy="no-referrer"> <script src="//e.dtscout.com/e/?v=1a&amp;pid=5200&amp;site=1&amp;l=https%3A%2F%2Fwarpsport24.online%2Ffavorite%2F&amp;j=" async="" type="text/javascript"></script><script type="text/javascript">window['Bonn'] = {
+            boots: [],
+            inits: []
+        };</script>
+        
+        <style id="sb_dark_style">img{-webkit-filter:brightness(70%);}</style>
+    <style id="sb_cln_style">ins[class*="adsbygoogle"],ins[class*="adsbyadop"],[id*="div-gpt-ad"],amp-ad{display:none !important;}</style> 
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+    <link media="all" href="https://warpsport24.online/wp-content/cache/autoptimize/css/autoptimize_1a037a85471fbf39a106aca3ddcecc83.css" rel="stylesheet">
+    <title>เกมติดตาม - Warpsport24</title>
+    
+    <link rel="canonical" href="https://warpsport24.online/favorite/">
+    <meta property="og:locale" content="th_TH">
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="เกมติดตาม - Warpsport24"><meta property="og:url" content="https://warpsport24.online/favorite/">
+    <meta property="og:site_name" content="Warpsport24"><meta property="article:modified_time" content="2023-08-27T01:43:59+00:00">
+    <meta name="twitter:card" content="summary_large_image"> <script type="application/ld+json" class="yoast-schema-graph">{"@context":"https:\/\/schema.org","@graph":[{"@type":"WebPage","@id":"https:\/\/warpsport24.online\/favorite\/","url":"https:\/\/warpsport24.online\/favorite\/","name":"เกมติดตาม - Warpsport24","isPartOf":{"@id":"https:\/\/warpsport24.online\/#website"},"datePublished":"2023-08-23T08:47:57+00:00","dateModified":"2023-08-27T01:43:59+00:00","breadcrumb":{"@id":"https:\/\/warpsport24.online\/favorite\/#breadcrumb"},"inLanguage":"th","potentialAction":[{"@type":"ReadAction","target":["https:\/\/warpsport24.online\/favorite\/"]}]},{"@type":"BreadcrumbList","@id":"https:\/\/warpsport24.online\/favorite\/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https:\/\/warpsport24.online\/"},{"@type":"ListItem","position":2,"name":"เกมติดตาม"}]},{"@type":"WebSite","@id":"https:\/\/warpsport24.online\/#website","url":"https:\/\/warpsport24.online\/","name":"Warpsport24","description":"","publisher":{"@id":"https:\/\/warpsport24.online\/#organization"},"potentialAction":[{"@type":"SearchAction","target":{"@type":"EntryPoint","urlTemplate":"https:\/\/warpsport24.online\/?s={search_term_string}"},"query-input":{"@type":"PropertyValueSpecification","valueRequired":true,"valueName":"search_term_string"}}],"inLanguage":"th"},{"@type":"Organization","@id":"https:\/\/warpsport24.online\/#organization","name":"Warpsport24","url":"https:\/\/warpsport24.online\/","logo":{"@type":"ImageObject","inLanguage":"th","@id":"https:\/\/warpsport24.online\/#\/schema\/logo\/image\/","url":"https:\/\/warpsport24.online\/wp-content\/uploads\/2023\/08\/warpsport.png","contentUrl":"https:\/\/warpsport24.online\/wp-content\/uploads\/2023\/08\/warpsport.png","width":1041,"height":304,"caption":"Warpsport24"},"image":{"@id":"https:\/\/warpsport24.online\/#\/schema\/logo\/image\/"}}]}</script> 
+    
+    <link rel="alternate" type="application/rss+xml" title="Warpsport24 » ฟีด" href="https://warpsport24.online/feed/">
+    <link rel="alternate" type="application/rss+xml" title="Warpsport24 » ฟีดความเห็น" href="https://warpsport24.online/comments/feed/">
+    <link rel="alternate" title="oEmbed (JSON)" type="application/json+oembed" href="https://warpsport24.online/wp-json/oembed/1.0/embed?url=https%3A%2F%2Fwarpsport24.online%2Ffavorite%2F">
+    <link rel="alternate" title="oEmbed (XML)" type="text/xml+oembed" href="https://warpsport24.online/wp-json/oembed/1.0/embed?url=https%3A%2F%2Fwarpsport24.online%2Ffavorite%2F&amp;format=xml">
+    <style id="wp-img-auto-sizes-contain-inline-css">img:is([sizes=auto i],[sizes^="auto," i]){contain-intrinsic-size:3000px 1500px}
+/*# sourceURL=wp-img-auto-sizes-contain-inline-css */
+
+        </style>
+    
+    <style id="wp-emoji-styles-inline-css">img.wp-smiley, img.emoji {
+		display: inline !important;
+		border: none !important;
+		box-shadow: none !important;
+		height: 1em !important;
+		width: 1em !important;
+		margin: 0 0.07em !important;
+		vertical-align: -0.1em !important;
+		background: none !important;
+		padding: 0 !important;
+	}
+/*# sourceURL=wp-emoji-styles-inline-css */</style><style id="wp-block-library-inline-css">:root{--wp-block-synced-color:#7a00df;--wp-block-synced-color--rgb:122,0,223;--wp-bound-block-color:var(--wp-block-synced-color);--wp-editor-canvas-background:#ddd;--wp-admin-theme-color:#007cba;--wp-admin-theme-color--rgb:0,124,186;--wp-admin-theme-color-darker-10:#006ba1;--wp-admin-theme-color-darker-10--rgb:0,107,160.5;--wp-admin-theme-color-darker-20:#005a87;--wp-admin-theme-color-darker-20--rgb:0,90,135;--wp-admin-border-width-focus:2px}@media (min-resolution:192dpi){:root{--wp-admin-border-width-focus:1.5px}}.wp-element-button{cursor:pointer}:root .has-very-light-gray-background-color{background-color:#eee}:root .has-very-dark-gray-background-color{background-color:#313131}:root .has-very-light-gray-color{color:#eee}:root .has-very-dark-gray-color{color:#313131}:root .has-vivid-green-cyan-to-vivid-cyan-blue-gradient-background{background:linear-gradient(135deg,#00d084,#0693e3)}:root .has-purple-crush-gradient-background{background:linear-gradient(135deg,#34e2e4,#4721fb 50%,#ab1dfe)}:root .has-hazy-dawn-gradient-background{background:linear-gradient(135deg,#faaca8,#dad0ec)}:root .has-subdued-olive-gradient-background{background:linear-gradient(135deg,#fafae1,#67a671)}:root .has-atomic-cream-gradient-background{background:linear-gradient(135deg,#fdd79a,#004a59)}:root .has-nightshade-gradient-background{background:linear-gradient(135deg,#330968,#31cdcf)}:root .has-midnight-gradient-background{background:linear-gradient(135deg,#020381,#2874fc)}:root{--wp--preset--font-size--normal:16px;--wp--preset--font-size--huge:42px}.has-regular-font-size{font-size:1em}.has-larger-font-size{font-size:2.625em}.has-normal-font-size{font-size:var(--wp--preset--font-size--normal)}.has-huge-font-size{font-size:var(--wp--preset--font-size--huge)}:root .has-text-align-center{text-align:center}:root .has-text-align-left{text-align:left}:root .has-text-align-right{text-align:right}.has-fit-text{white-space:nowrap!important}#end-resizable-editor-section{display:none}.aligncenter{clear:both}.items-justified-left{justify-content:flex-start}.items-justified-center{justify-content:center}.items-justified-right{justify-content:flex-end}.items-justified-space-between{justify-content:space-between}.screen-reader-text{word-wrap:normal!important;border:0;clip-path:inset(50%);height:1px;margin:-1px;overflow:hidden;padding:0;position:absolute;width:1px}.screen-reader-text:focus{background-color:#ddd;clip-path:none;color:#444;display:block;font-size:1em;height:auto;left:5px;line-height:normal;padding:15px 23px 14px;text-decoration:none;top:5px;width:auto;z-index:100000}html :where(.has-border-color){border-style:solid}html :where([style*=border-color]){border-style:solid}html :where([style*=border-top-color]){border-top-style:solid}html :where([style*=border-right-color]){border-right-style:solid}html :where([style*=border-bottom-color]){border-bottom-style:solid}html :where([style*=border-left-color]){border-left-style:solid}html :where([style*=border-width]){border-style:solid}html :where([style*=border-top-width]){border-top-style:solid}html :where([style*=border-right-width]){border-right-style:solid}html :where([style*=border-bottom-width]){border-bottom-style:solid}html :where([style*=border-left-width]){border-left-style:solid}html :where(img[class*=wp-image-]){height:auto;max-width:100%}:where(figure){margin:0 0 1em}html :where(.is-position-sticky){--wp-admin--admin-bar--position-offset:var(--wp-admin--admin-bar--height,0px)}@media screen and (max-width:600px){html :where(.is-position-sticky){--wp-admin--admin-bar--position-offset:0px}}
+
+/*# sourceURL=/wp-includes/css/dist/block-library/common.min.css */</style><style id="classic-theme-styles-inline-css">/*! This file is auto-generated */
+.wp-block-button__link{color:#fff;background-color:#32373c;border-radius:9999px;box-shadow:none;text-decoration:none;padding:calc(.667em + 2px) calc(1.333em + 2px);font-size:1.125em}.wp-block-file__button{background:#32373c;color:#fff;text-decoration:none}
+/*# sourceURL=/wp-includes/css/classic-themes.min.css */</style><style id="global-styles-inline-css">:root{--wp--preset--aspect-ratio--square: 1;--wp--preset--aspect-ratio--4-3: 4/3;--wp--preset--aspect-ratio--3-4: 3/4;--wp--preset--aspect-ratio--3-2: 3/2;--wp--preset--aspect-ratio--2-3: 2/3;--wp--preset--aspect-ratio--16-9: 16/9;--wp--preset--aspect-ratio--9-16: 9/16;--wp--preset--color--black: #000000;--wp--preset--color--cyan-bluish-gray: #abb8c3;--wp--preset--color--white: #ffffff;--wp--preset--color--pale-pink: #f78da7;--wp--preset--color--vivid-red: #cf2e2e;--wp--preset--color--luminous-vivid-orange: #ff6900;--wp--preset--color--luminous-vivid-amber: #fcb900;--wp--preset--color--light-green-cyan: #7bdcb5;--wp--preset--color--vivid-green-cyan: #00d084;--wp--preset--color--pale-cyan-blue: #8ed1fc;--wp--preset--color--vivid-cyan-blue: #0693e3;--wp--preset--color--vivid-purple: #9b51e0;--wp--preset--gradient--vivid-cyan-blue-to-vivid-purple: linear-gradient(135deg,rgb(6,147,227) 0%,rgb(155,81,224) 100%);--wp--preset--gradient--light-green-cyan-to-vivid-green-cyan: linear-gradient(135deg,rgb(122,220,180) 0%,rgb(0,208,130) 100%);--wp--preset--gradient--luminous-vivid-amber-to-luminous-vivid-orange: linear-gradient(135deg,rgb(252,185,0) 0%,rgb(255,105,0) 100%);--wp--preset--gradient--luminous-vivid-orange-to-vivid-red: linear-gradient(135deg,rgb(255,105,0) 0%,rgb(207,46,46) 100%);--wp--preset--gradient--very-light-gray-to-cyan-bluish-gray: linear-gradient(135deg,rgb(238,238,238) 0%,rgb(169,184,195) 100%);--wp--preset--gradient--cool-to-warm-spectrum: linear-gradient(135deg,rgb(74,234,220) 0%,rgb(151,120,209) 20%,rgb(207,42,186) 40%,rgb(238,44,130) 60%,rgb(251,105,98) 80%,rgb(254,248,76) 100%);--wp--preset--gradient--blush-light-purple: linear-gradient(135deg,rgb(255,206,236) 0%,rgb(152,150,240) 100%);--wp--preset--gradient--blush-bordeaux: linear-gradient(135deg,rgb(254,205,165) 0%,rgb(254,45,45) 50%,rgb(107,0,62) 100%);--wp--preset--gradient--luminous-dusk: linear-gradient(135deg,rgb(255,203,112) 0%,rgb(199,81,192) 50%,rgb(65,88,208) 100%);--wp--preset--gradient--pale-ocean: linear-gradient(135deg,rgb(255,245,203) 0%,rgb(182,227,212) 50%,rgb(51,167,181) 100%);--wp--preset--gradient--electric-grass: linear-gradient(135deg,rgb(202,248,128) 0%,rgb(113,206,126) 100%);--wp--preset--gradient--midnight: linear-gradient(135deg,rgb(2,3,129) 0%,rgb(40,116,252) 100%);--wp--preset--font-size--small: 13px;--wp--preset--font-size--medium: 20px;--wp--preset--font-size--large: 36px;--wp--preset--font-size--x-large: 42px;--wp--preset--spacing--20: 0.44rem;--wp--preset--spacing--30: 0.67rem;--wp--preset--spacing--40: 1rem;--wp--preset--spacing--50: 1.5rem;--wp--preset--spacing--60: 2.25rem;--wp--preset--spacing--70: 3.38rem;--wp--preset--spacing--80: 5.06rem;--wp--preset--shadow--natural: 6px 6px 9px rgba(0, 0, 0, 0.2);--wp--preset--shadow--deep: 12px 12px 50px rgba(0, 0, 0, 0.4);--wp--preset--shadow--sharp: 6px 6px 0px rgba(0, 0, 0, 0.2);--wp--preset--shadow--outlined: 6px 6px 0px -3px rgb(255, 255, 255), 6px 6px rgb(0, 0, 0);--wp--preset--shadow--crisp: 6px 6px 0px rgb(0, 0, 0);}:where(body) { margin: 0; }:where(.is-layout-flex){gap: 0.5em;}:where(.is-layout-grid){gap: 0.5em;}body .is-layout-flex{display: flex;}.is-layout-flex{flex-wrap: wrap;align-items: center;}.is-layout-flex > :is(*, div){margin: 0;}body .is-layout-grid{display: grid;}.is-layout-grid > :is(*, div){margin: 0;}body{padding-top: 0px;padding-right: 0px;padding-bottom: 0px;padding-left: 0px;}:root :where(.wp-element-button, .wp-block-button__link){background-color: #32373c;border-width: 0;color: #fff;font-family: inherit;font-size: inherit;font-style: inherit;font-weight: inherit;letter-spacing: inherit;line-height: inherit;padding-top: calc(0.667em + 2px);padding-right: calc(1.333em + 2px);padding-bottom: calc(0.667em + 2px);padding-left: calc(1.333em + 2px);text-decoration: none;text-transform: inherit;}.has-black-color{color: var(--wp--preset--color--black) !important;}.has-cyan-bluish-gray-color{color: var(--wp--preset--color--cyan-bluish-gray) !important;}.has-white-color{color: var(--wp--preset--color--white) !important;}.has-pale-pink-color{color: var(--wp--preset--color--pale-pink) !important;}.has-vivid-red-color{color: var(--wp--preset--color--vivid-red) !important;}.has-luminous-vivid-orange-color{color: var(--wp--preset--color--luminous-vivid-orange) !important;}.has-luminous-vivid-amber-color{color: var(--wp--preset--color--luminous-vivid-amber) !important;}.has-light-green-cyan-color{color: var(--wp--preset--color--light-green-cyan) !important;}.has-vivid-green-cyan-color{color: var(--wp--preset--color--vivid-green-cyan) !important;}.has-pale-cyan-blue-color{color: var(--wp--preset--color--pale-cyan-blue) !important;}.has-vivid-cyan-blue-color{color: var(--wp--preset--color--vivid-cyan-blue) !important;}.has-vivid-purple-color{color: var(--wp--preset--color--vivid-purple) !important;}.has-black-background-color{background-color: var(--wp--preset--color--black) !important;}.has-cyan-bluish-gray-background-color{background-color: var(--wp--preset--color--cyan-bluish-gray) !important;}.has-white-background-color{background-color: var(--wp--preset--color--white) !important;}.has-pale-pink-background-color{background-color: var(--wp--preset--color--pale-pink) !important;}.has-vivid-red-background-color{background-color: var(--wp--preset--color--vivid-red) !important;}.has-luminous-vivid-orange-background-color{background-color: var(--wp--preset--color--luminous-vivid-orange) !important;}.has-luminous-vivid-amber-background-color{background-color: var(--wp--preset--color--luminous-vivid-amber) !important;}.has-light-green-cyan-background-color{background-color: var(--wp--preset--color--light-green-cyan) !important;}.has-vivid-green-cyan-background-color{background-color: var(--wp--preset--color--vivid-green-cyan) !important;}.has-pale-cyan-blue-background-color{background-color: var(--wp--preset--color--pale-cyan-blue) !important;}.has-vivid-cyan-blue-background-color{background-color: var(--wp--preset--color--vivid-cyan-blue) !important;}.has-vivid-purple-background-color{background-color: var(--wp--preset--color--vivid-purple) !important;}.has-black-border-color{border-color: var(--wp--preset--color--black) !important;}.has-cyan-bluish-gray-border-color{border-color: var(--wp--preset--color--cyan-bluish-gray) !important;}.has-white-border-color{border-color: var(--wp--preset--color--white) !important;}.has-pale-pink-border-color{border-color: var(--wp--preset--color--pale-pink) !important;}.has-vivid-red-border-color{border-color: var(--wp--preset--color--vivid-red) !important;}.has-luminous-vivid-orange-border-color{border-color: var(--wp--preset--color--luminous-vivid-orange) !important;}.has-luminous-vivid-amber-border-color{border-color: var(--wp--preset--color--luminous-vivid-amber) !important;}.has-light-green-cyan-border-color{border-color: var(--wp--preset--color--light-green-cyan) !important;}.has-vivid-green-cyan-border-color{border-color: var(--wp--preset--color--vivid-green-cyan) !important;}.has-pale-cyan-blue-border-color{border-color: var(--wp--preset--color--pale-cyan-blue) !important;}.has-vivid-cyan-blue-border-color{border-color: var(--wp--preset--color--vivid-cyan-blue) !important;}.has-vivid-purple-border-color{border-color: var(--wp--preset--color--vivid-purple) !important;}.has-vivid-cyan-blue-to-vivid-purple-gradient-background{background: var(--wp--preset--gradient--vivid-cyan-blue-to-vivid-purple) !important;}.has-light-green-cyan-to-vivid-green-cyan-gradient-background{background: var(--wp--preset--gradient--light-green-cyan-to-vivid-green-cyan) !important;}.has-luminous-vivid-amber-to-luminous-vivid-orange-gradient-background{background: var(--wp--preset--gradient--luminous-vivid-amber-to-luminous-vivid-orange) !important;}.has-luminous-vivid-orange-to-vivid-red-gradient-background{background: var(--wp--preset--gradient--luminous-vivid-orange-to-vivid-red) !important;}.has-very-light-gray-to-cyan-bluish-gray-gradient-background{background: var(--wp--preset--gradient--very-light-gray-to-cyan-bluish-gray) !important;}.has-cool-to-warm-spectrum-gradient-background{background: var(--wp--preset--gradient--cool-to-warm-spectrum) !important;}.has-blush-light-purple-gradient-background{background: var(--wp--preset--gradient--blush-light-purple) !important;}.has-blush-bordeaux-gradient-background{background: var(--wp--preset--gradient--blush-bordeaux) !important;}.has-luminous-dusk-gradient-background{background: var(--wp--preset--gradient--luminous-dusk) !important;}.has-pale-ocean-gradient-background{background: var(--wp--preset--gradient--pale-ocean) !important;}.has-electric-grass-gradient-background{background: var(--wp--preset--gradient--electric-grass) !important;}.has-midnight-gradient-background{background: var(--wp--preset--gradient--midnight) !important;}.has-small-font-size{font-size: var(--wp--preset--font-size--small) !important;}.has-medium-font-size{font-size: var(--wp--preset--font-size--medium) !important;}.has-large-font-size{font-size: var(--wp--preset--font-size--large) !important;}.has-x-large-font-size{font-size: var(--wp--preset--font-size--x-large) !important;}
+/*# sourceURL=global-styles-inline-css */</style><style id="generateblocks-inline-css">:root{--gb-container-width:1100px;}.gb-container .wp-block-image img{vertical-align:middle;}.gb-grid-wrapper .wp-block-image{margin-bottom:0;}.gb-highlight{background:none;}.gb-shape{line-height:0;}
+/*# sourceURL=generateblocks-inline-css */
+
+          </style> 
+
+    <script id="jquery-core-js" src="https://warpsport24.online/wp-includes/js/jquery/jquery.min.js?ver=3.7.1">
+    </script> <script id="jquery-migrate-js" src="https://warpsport24.online/wp-includes/js/jquery/jquery-migrate.min.js?ver=3.4.1"></script>
+    <link rel="https://api.w.org/" href="https://warpsport24.online/wp-json/">
+    <link rel="alternate" title="JSON" type="application/json" href="https://warpsport24.online/wp-json/wp/v2/pages/1034">
+    <link rel="EditURI" type="application/rsd+xml" title="RSD" href="https://warpsport24.online/xmlrpc.php?rsd">  <script async="" src="https://www.googletagmanager.com/gtag/js?id=G-7TQLBVZ8NN">
+    </script> 
+     <script>window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-7TQLBVZ8NN');</script> 
+  
+ 
+  </head>
+        <body data-rsssl="1" class="wp-singular page-template page-template-page-templates page-template-favorite-page page-template-page-templatesfavorite-page-php page page-id-1034 wp-custom-logo wp-theme-dooball no-sidebar">
+    <div id="histats_counter">
+
+      
+      <noscript>
+          
+  
+      </noscript> 
+      
+      <style>
+     .dooball-banner-container {
+            position: relative;
+            margin: 0 auto 15px auto;
+            text-align: center;
+            display: block;
+            width: 100%;
+        }
+
+        .dooball-banner-container.banner-pos-above_match_table {
+            max-width: 772px;
+            margin-top: calc(4.5rem + var(--wc-banner-h, 60px)) !important;
+        }
+
+        .dooball-banner-container.banner-pos-below_player {
+            max-width: 728px;
+        }
+
+        .dooball-banner-container.banner-pos-below_match_table,
+        .dooball-banner-group.banner-pos-below_match_table {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1060;
+            max-width: 728px;
+            width: 100%;
+            margin: 0;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.5);
+            background: rgba(17, 17, 17, 0.9);
+            padding: 5px;
+            border-radius: 4px 4px 0 0;
+            box-sizing: border-box;
+        }
+
+        /* Inner containers inside group: reset fixed positioning */
+        .dooball-banner-group .dooball-banner-container {
+            position: relative !important;
+            bottom: auto !important;
+            left: auto !important;
+            transform: none !important;
+            z-index: auto !important;
+            box-shadow: none !important;
+            background: transparent !important;
+            padding: 0 !important;
+            border-radius: 0 !important;
+            margin: 0 0 8px 0 !important;
+            max-width: 100% !important;
+        }
+
+        .dooball-banner-group .dooball-banner-container:last-child {
+            margin-bottom: 0 !important;
+        }
+
+        @media (max-width: 767.98px) {
+            .dooball-banner-container.banner-pos-below_match_table,
+            .dooball-banner-group.banner-pos-below_match_table {
+                bottom: 50px;
+                /* Offset to clear mobile bottom navigation menu */
+                width: calc(100% - 10px);
+                border-radius: 4px;
+            }
+        }
+
+        .dooball-banner-container a {
+            display: block;
+            width: 100%;
+        }
+
+        .dooball-banner-container img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+            border-radius: 4px;
+        }
+
+        .dooball-banner-container .close-banner-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(0, 0, 0, 0.65);
+            color: #fff;
+            border: none;
+            border-radius: 50%;
+            width: 22px;
+            height: 22px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+            line-height: 1;
+            z-index: 1;
+            transition: background 0.2s, transform 0.1s;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .dooball-banner-container .close-banner-btn:hover {
+            background: rgba(220, 53, 69, 0.95);
+            transform: scale(1.05);
+        }
+
+        .dooball-banner-container .close-banner-btn:active {
+            transform: scale(0.95);
+        }</style>
+        
+        <link rel="icon" href="https://warpsport24.online/wp-content/uploads/2023/08/cropped-warpsport1-32x32.png" sizes="32x32"><link rel="icon" href="https://warpsport24.online/wp-content/uploads/2023/08/cropped-warpsport1-192x192.png" sizes="192x192"><link rel="apple-touch-icon" href="https://warpsport24.online/wp-content/uploads/2023/08/cropped-warpsport1-180x180.png"><meta name="msapplication-TileImage" content="https://warpsport24.online/wp-content/uploads/2023/08/cropped-warpsport1-270x270.png"><style id="wp-custom-css">.x-header .navbar-brand .-logo {
+    width: 140px;
+}
+.dooball-banner-container.banner-pos-above_match_table + .dooball-banner-container.banner-pos-above_match_table {
+	margin-top: .5em !important;
+}
+@media (max-width: 991.98px){
+	.x-header .navbar-brand .-logo {
+    width: 120px;
+	}
+}</style><div id="page" class="site"> <a class="skip-link screen-reader-text" href="#primary">Skip to content</a><header id="masthead" class="site-header"><nav class="x-header navbar navbar-expand-lg -normal">
+    
+    <div class="container-fluid container-lg">
+        
+    <div id="headerContent"><div class="-hamburger-wrapper animated fadeIn" data-animatable="fadeIn" data-delay="100"> <button type="button" class="btn bg-transparent p-0 x-hamburger -normal d-block d-lg-none" data-overlay-page-target=".x-theme-switcher-page-container" data-header-inside="close" data-header-inside-target=".x-base-overlay-screen" data-header-inside-target-class="-show"> <span></span> <span></span> <span></span> </button>
+    </div> 
+
+
+  <div class="-menu-wrapper"><ul id="menu-main" class="nav x-menus-container"><li id="menu-item-1015" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-home menu-item-1015 nav-item">
+    
+     <a href="https://warpsport24.online/" class="nav-link animated fadeInLeftShortly" data-animatable="fadeInLeftShortly" data-delay="150"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 mr-2" data-v-ebd68cb9="">
+     
+     <path stroke-linecap="round" stroke-linejoin="round" d="M6 20.25h12m-7.5-3v3m3-3v3m-10.125-3h17.25c.621 0 1.125-.504 1.125-1.125V4.875c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125z" data-v-ebd68cb9=""></path></svg>ดูบอลสด</a></li><li id="menu-item-12936" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-12936 nav-item">
+         
+         <a href="https://warpsport24.online/muaythai/" class="nav-link animated fadeInLeftShortly" data-animatable="fadeInLeftShortly" data-delay="150"><svg id="Layer_1" style="fill:#fff;width:2.5em;margin-right:5px;" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 122.88 74.57"><defs><style>.cls-1{fill-rule:evenodd;}</style></defs><title>fight-dispute</title><path class="cls-1" d="M102.43,64.39a31.59,31.59,0,0,0,1.62-6.34,28.23,28.23,0,0,0,.16-5.11,31.42,31.42,0,0,0-2.79-11,32.16,32.16,0,0,0-4.67-4.37,26,26,0,0,0-5.13-3,28.07,28.07,0,0,0-6.12-1.88,20.31,20.31,0,0,0-5.64-.3A12,12,0,0,0,75,34,4,4,0,0,0,73,36.36c-.25,1.36,2.25,2.4,5.09,3.15l.23,0A41,41,0,0,1,85,41a1.34,1.34,0,0,1-.64,2.59l-1.28-.25c-1.44-.26-3.33-.62-5.22-1.13-3.7-.42-6.62,0-8.78,1.18a9.11,9.11,0,0,0-4.32,5.72,17.06,17.06,0,0,0-.54,2.69,33.92,33.92,0,0,0,.25,8.66,16,16,0,0,0,2,6.11A10.51,10.51,0,0,0,71,70.23a20.21,20.21,0,0,0,7.4,1.66h0c1.27,0,2.56,0,3.85-.11s2.57-.23,3.85-.43a41.48,41.48,0,0,0,7-1.53,26,26,0,0,0,6.25-3l.07-.05a27.49,27.49,0,0,0,3.08-2.35Zm-83.6-6.32a32.1,32.1,0,0,0,1.62,6.32,27.49,27.49,0,0,0,3.08,2.35l.07.05a26,26,0,0,0,6.25,3,41.48,41.48,0,0,0,6.95,1.53c1.28.2,2.57.34,3.85.43s2.58.13,3.85.11h0a20.21,20.21,0,0,0,7.4-1.66,10.51,10.51,0,0,0,4.44-3.7,16,16,0,0,0,2-6.11,33.92,33.92,0,0,0,.25-8.66,17.06,17.06,0,0,0-.54-2.69,9.11,9.11,0,0,0-4.32-5.72c-2.16-1.18-5.09-1.6-8.78-1.18-1.89.52-3.78.87-5.22,1.13l-1.28.25A1.34,1.34,0,0,1,37.84,41a41.24,41.24,0,0,1,6.68-1.42l.23,0c2.83-.75,5.34-1.79,5.09-3.15A4,4,0,0,0,47.9,34,12,12,0,0,0,43,32.31a20.31,20.31,0,0,0-5.64.3,28.07,28.07,0,0,0-6.12,1.88,26,26,0,0,0-5.13,3,32.16,32.16,0,0,0-4.67,4.37,31.42,31.42,0,0,0-2.79,11,28.45,28.45,0,0,0,.16,5.13Zm-.42,8.07c-.81,0-1.72.1-2.66.17-5.32.38-11.66.84-14-3.48C.46,60.59-.19,55.66.05,51.14c.22-4,1.13-7.7,3-9.33a6.72,6.72,0,0,1,2.05-1.25A8.75,8.75,0,0,1,7.38,40l12.4-.21a34.32,34.32,0,0,1,4.74-4.38,28.53,28.53,0,0,1,5.67-3.35A30.41,30.41,0,0,1,36.9,30a22.57,22.57,0,0,1,6.39-.33,15.05,15.05,0,0,1,6.05,2.11,6.43,6.43,0,0,1,3.12,4.12,3.73,3.73,0,0,1-1.63,3.71A13.5,13.5,0,0,1,55,41a11.66,11.66,0,0,1,5.61,7.31,18.64,18.64,0,0,1,.63,3.13c.09.73.14,1.56.17,2.45h0c0-.89.08-1.72.17-2.45a18.64,18.64,0,0,1,.63-3.13A11.63,11.63,0,0,1,67.85,41a13.5,13.5,0,0,1,4.2-1.41,3.73,3.73,0,0,1-1.63-3.71,6.43,6.43,0,0,1,3.12-4.12,15.05,15.05,0,0,1,6-2.11A22.57,22.57,0,0,1,86,30a30.41,30.41,0,0,1,6.71,2.07,28.82,28.82,0,0,1,5.67,3.35,34.32,34.32,0,0,1,4.74,4.38l12.29.2h.11a8.75,8.75,0,0,1,2.32.56,6.84,6.84,0,0,1,2.05,1.25c1.83,1.63,2.74,5.38,3,9.33.24,4.52-.41,9.45-1.65,11.69-2.39,4.32-8.73,3.86-14.05,3.48-.94-.07-1.85-.14-2.66-.17A30.33,30.33,0,0,1,100.82,69l-.07.05a28.7,28.7,0,0,1-6.88,3.36A45.66,45.66,0,0,1,86.48,74c-1.33.2-2.69.35-4.07.44s-2.68.13-4.07.11h-.13a23,23,0,0,1-8.38-1.91A13.13,13.13,0,0,1,64.31,68a18.59,18.59,0,0,1-2.43-7.2A36.72,36.72,0,0,1,61.44,56h0A36.72,36.72,0,0,1,61,60.82,18.59,18.59,0,0,1,58.57,68a13.13,13.13,0,0,1-5.52,4.63,23,23,0,0,1-8.38,1.91h-.13c-1.39,0-2.75,0-4.07-.11s-2.74-.24-4.07-.44A45.66,45.66,0,0,1,29,72.37,28.7,28.7,0,0,1,22.13,69L22.06,69a30.33,30.33,0,0,1-3.65-2.82ZM11.14,41.2,17,41c-3.36,3-4,3.88-4.58,8.19-.17,1.29-.29,2.63-.35,4,.29,2.19-.47,3.34-2.39,3.32l-1,0c-1.36-.32-2.38-1.15-2.23-3.79l.5-4.19c.22-1.88.15-4,1.49-5.46a8.52,8.52,0,0,1,2.74-1.93ZM73,52.27a1.19,1.19,0,0,1,2.3-.63,22.33,22.33,0,0,1,.82,5,17.68,17.68,0,0,1-.45,5A1.19,1.19,0,0,1,73.38,61a15.1,15.1,0,0,0,.4-4.29A20.11,20.11,0,0,0,73,52.27Zm6.44,0a1.19,1.19,0,0,1,2.29-.63,23,23,0,0,1,.83,5,17.33,17.33,0,0,1-.46,5A1.19,1.19,0,1,1,79.82,61a15.09,15.09,0,0,0,.39-4.29,20.69,20.69,0,0,0-.74-4.45Zm-31.92-.63a1.19,1.19,0,0,1,2.3.63,20,20,0,0,0-.75,4.45A15.1,15.1,0,0,0,49.5,61a1.19,1.19,0,1,1-2.32.56,17.68,17.68,0,0,1-.45-5,22.33,22.33,0,0,1,.82-5Zm-6.43,0a1.19,1.19,0,0,1,2.29.63,20.58,20.58,0,0,0-.74,4.45A15.09,15.09,0,0,0,43.06,61a1.2,1.2,0,0,1-.88,1.44,1.19,1.19,0,0,1-1.43-.88,17.33,17.33,0,0,1-.46-5,23,23,0,0,1,.83-5Zm12.45-23.7a1.66,1.66,0,0,1-2.12,2.55L37.23,18.67,53.48,19,50.81,5.21l11.76,7.84L68.88,0l4.41,13.55,13.39-7-4.9,14.09,14,1.32-6.59,7a1.66,1.66,0,0,1-2.42-2.27l2-2.09L77.25,23.51l3.54-10.16-9.45,5L68.28,8.88l-4.38,9-8.32-5.55,1.94,10-10.89-.22,6.94,5.77Zm50.87,14.25a33.56,33.56,0,0,1,2.43,10.61,32.72,32.72,0,0,1-1.27,11l1.7.12c4.63.34,10.15.74,11.79-2.25,1-1.89,1.59-6.28,1.36-10.42-.18-3.39-.86-6.51-2.17-7.67a4.28,4.28,0,0,0-1.33-.82,6.67,6.67,0,0,0-1.68-.4l-1.63,0a6.36,6.36,0,0,1,.84.79c1.34,1.49,1.27,3.58,1.49,5.46l.5,4.19c.15,2.64-.87,3.47-2.23,3.79l-1,0c-1.92,0-2.68-1.13-2.39-3.32-.06-1.39-.18-2.73-.35-4-.47-3.65-1-4.86-3.21-7l-2.86,0Z"></path></svg> มวยไทย</a></li><li id="menu-item-1040" class="menu-item menu-item-type-post_type menu-item-object-page current-menu-item page_item page-item-1034 current_page_item menu-item-1040 nav-item -active">
+         
+         <a href="https://warpsport24.online/favorite/" aria-current="page" class="nav-link -active animated fadeInLeftShortly" data-animatable="fadeInLeftShortly" data-delay="150"><span class="badge badge-favorite"></span> <i class="far fa-star mr-1" style="font-size: 1.47rem;"></i> เกมติดตาม</a></li><li id="menu-item-11061" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-11061 nav-item">
+         
+         <a href="https://warpsport24.online/sport-other/" class="nav-link animated fadeInLeftShortly" data-animatable="fadeInLeftShortly" data-delay="150"><i class="fas fa-futbol mr-1" style="font-size: 1.47rem;"></i> กีฬาอื่น</a></li><li id="menu-item-1017" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-1017 nav-item">
+         <a href="https://warpsport24.online/news/" class="nav-link animated fadeInLeftShortly" data-animatable="fadeInLeftShortly" data-delay="150"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 mr-2" data-v-ebd68cb9=""><path stroke-linecap="round" stroke-linejoin="round" d="M12 7.5h1.5m-1.5 3h1.5m-7.5 3h7.5m-7.5 3h7.5m3-9h3.375c.621 0 1.125.504 1.125 1.125V18a2.25 2.25 0 01-2.25 2.25M16.5 7.5V18a2.25 2.25 0 002.25 2.25M16.5 7.5V4.875c0-.621-.504-1.125-1.125-1.125H4.125C3.504 3.75 3 4.254 3 4.875V18a2.25 2.25 0 002.25 2.25h13.5M6 7.5h3v3H6v-3z" data-v-ebd68cb9=""></path></svg>บทความ</a></li><li id="menu-item-1016" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-1016 nav-item">
+         
+         <a href="https://warpsport24.online/highlight/" class="nav-link animated fadeInLeftShortly" data-animatable="fadeInLeftShortly" data-delay="150"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="white" class="w-6 h-6 mr-2" data-v-ebd68cb9=""><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" data-v-ebd68cb9=""></path><path stroke-linecap="round" stroke-linejoin="round" d="M15.91 11.672a.375.375 0 010 .656l-5.603 3.113a.375.375 0 01-.557-.328V8.887c0-.286.307-.466.557-.327l5.603 3.112z" data-v-ebd68cb9=""></path></svg>ไฮไลท์</a></li><li id="menu-item-1158" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-1158 nav-item">
+             
+             
+          
+         
+         
+         
+         <a href="https://warpsport24.online/football-results-last-night/" class="nav-link animated fadeInLeftShortly" data-animatable="fadeInLeftShortly" data-delay="150"><i class="fas fa-futbol mr-1" style="font-size: 1.47rem;"></i> ผลบอลเมื่อคืน</a></li><li id="menu-item-11757" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-11757 nav-item"><a target="_blank" href="https://movietofree.com" class="nav-link animated fadeInLeftShortly" data-animatable="fadeInLeftShortly" data-delay="150"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z"></path><path d="M8 4l0 16"></path><path d="M16 4l0 16"></path><path d="M4 8l4 0"></path><path d="M4 16l4 0"></path><path d="M4 12l16 0"></path><path d="M16 8l4 0"></path><path d="M16 16l4 0"></path></svg> ดูหนัง</a></li><li id="menu-item-21620" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-21620 nav-item"><a target="_blank" href="https://t.me/djtonor230" class="nav-link animated fadeInLeftShortly" data-animatable="fadeInLeftShortly" data-delay="150"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path fill="rgb(255, 255, 255)" d="M320 72C183 72 72 183 72 320C72 457 183 568 320 568C457 568 568 457 568 320C568 183 457 72 320 72zM435 240.7C431.3 279.9 415.1 375.1 406.9 419C403.4 437.6 396.6 443.8 390 444.4C375.6 445.7 364.7 434.9 350.7 425.7C328.9 411.4 316.5 402.5 295.4 388.5C270.9 372.4 286.8 363.5 300.7 349C304.4 345.2 367.8 287.5 369 282.3C369.2 281.6 369.3 279.2 367.8 277.9C366.3 276.6 364.2 277.1 362.7 277.4C360.5 277.9 325.6 300.9 258.1 346.5C248.2 353.3 239.2 356.6 231.2 356.4C222.3 356.2 205.3 351.4 192.6 347.3C177.1 342.3 164.7 339.6 165.8 331C166.4 326.5 172.5 322 184.2 317.3C256.5 285.8 304.7 265 328.8 255C397.7 226.4 412 221.4 421.3 221.2C423.4 221.2 427.9 221.7 430.9 224.1C432.9 225.8 434.1 228.2 434.4 230.8C434.9 234 435 237.3 434.8 240.6z"></path></svg> ติดต่อเรา</a></li></ul></div></div> <button type="button" class="btn -btn-inside -btn-inside-back" data-header-inside-back="" aria-label=""> <i class="fas fa-chevron-left"></i> <i class="fas fa-chevron-left -ic-2"></i> </button> <button type="button" class="btn -btn-inside -btn-inside-close" data-header-inside-dismiss="" aria-label=""> <i class="fas fa-times"></i> </button></div></nav></header><div class="container"></div>
+     
+     <main id="primary" class="site-main container">
+         
+     <div class="row">
+
+        <div class="col-12"><div class="table-ball min-vh-100"><div class="text-center my-3 f-5">   ชัยประเสิฐ นพรัตน์
+        
+        </div></div></div></div></main>
+     
+     <div id="back-top" style="display: none;"> 
+     
+     <a href="#--top"> <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"> <path d="M233.4 105.4c12.5-12.5 32.8-12.5 45.3 0l192 192c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L256 173.3 86.6 342.6c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3l192-192z"></path> </svg> </a></div><style>#back-top svg {
+        fill: #fff;
+        font-size: 2em;
+    }
+
+    #back-top a {
+        position: fixed;
+        right: 15px;
+        bottom: 100px;
+        background: #ab0101;
+        z-index: 1000;
+        text-decoration: none;
+        -webkit-transition: all .8s ease 0s;
+        -o-transition: all .8s ease 0s;
+        transition: all .8s ease 0s;
+        -webkit-box-shadow: 0 1px 4px rgba(0, 0, 0, .2);
+        box-shadow: 0 1px 4px rgba(0, 0, 0, .2);
+        width: 40px;
+        height: 40px;
+        text-align: center;
+        -webkit-transition-duration: .4s;
+        -o-transition-duration: .4s;
+        transition-duration: .4s
+    }</style> <script>jQuery(document).ready(function(a) {
+        a(window).scroll(function() {
+                100 < a(this).scrollTop() ?
+                    a('#back-top').fadeIn() :
+                    a('#back-top').fadeOut();
+            }),
+            a('#back-top').click(function() {
+                return (
+                    a('html, body').animate({
+                            scrollTop: 0,
+                        },
+                        800
+                    ),
+                    !1
+                );
+            });
+    })</script> <script id="loading" type="text/template"><div class="x-loading-container">
+        <div class="lds-ripple">
+            <div></div>
+            <div></div>
+        </div>
+    </div></script> 
+    
+    <footer id="colophon" class="site-footer container mt-5"><div class="site-info text-center"> Theme: dooball by 
+    
+    <a href="https://isgamez.com/" target="_blank">ISGAMEZ.COM</a></div>
+</footer>
+</div>
+    
+    <div class="x-base-overlay-screen x-theme-switcher-page-container">
+        <div class="container">
+        <div class="row -outer-row-wrapper"><div class="col-md-7 col-lg-6 col-xl-5 -outer-col-wrapper"><div class="row justify-content-center"><div class="col-12">
+    
+    <div class="-title"> <span>เมนู</span></div></div><div class="col-8">
+    
+    <div class="-menu-wrapper"><ul id="menu-main-1" class="nav x-menus-container flex-column"><li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-home menu-item-1015 nav-item">
+        
+        <a href="https://warpsport24.online/" class="nav-link animated fadeInLeftShortly" data-animatable="fadeInLeftShortly" data-delay="150"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 mr-2" data-v-ebd68cb9="">
+    
+    <path stroke-linecap="round" stroke-linejoin="round" d="M6 20.25h12m-7.5-3v3m3-3v3m-10.125-3h17.25c.621 0 1.125-.504 1.125-1.125V4.875c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125z" data-v-ebd68cb9=""></path></svg>ดูบอลสด</a></li><li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-12936 nav-item">
+    
+    <a href="https://warpsport24.online/muaythai/" class="nav-link animated fadeInLeftShortly" data-animatable="fadeInLeftShortly" data-delay="150"><svg id="Layer_1" style="fill:#fff;width:2.5em;margin-right:5px;" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 122.88 74.57"><defs><style>.cls-1{fill-rule:evenodd;}</style></defs><title>fight-dispute</title><path class="cls-1" d="M102.43,64.39a31.59,31.59,0,0,0,1.62-6.34,28.23,28.23,0,0,0,.16-5.11,31.42,31.42,0,0,0-2.79-11,32.16,32.16,0,0,0-4.67-4.37,26,26,0,0,0-5.13-3,28.07,28.07,0,0,0-6.12-1.88,20.31,20.31,0,0,0-5.64-.3A12,12,0,0,0,75,34,4,4,0,0,0,73,36.36c-.25,1.36,2.25,2.4,5.09,3.15l.23,0A41,41,0,0,1,85,41a1.34,1.34,0,0,1-.64,2.59l-1.28-.25c-1.44-.26-3.33-.62-5.22-1.13-3.7-.42-6.62,0-8.78,1.18a9.11,9.11,0,0,0-4.32,5.72,17.06,17.06,0,0,0-.54,2.69,33.92,33.92,0,0,0,.25,8.66,16,16,0,0,0,2,6.11A10.51,10.51,0,0,0,71,70.23a20.21,20.21,0,0,0,7.4,1.66h0c1.27,0,2.56,0,3.85-.11s2.57-.23,3.85-.43a41.48,41.48,0,0,0,7-1.53,26,26,0,0,0,6.25-3l.07-.05a27.49,27.49,0,0,0,3.08-2.35Zm-83.6-6.32a32.1,32.1,0,0,0,1.62,6.32,27.49,27.49,0,0,0,3.08,2.35l.07.05a26,26,0,0,0,6.25,3,41.48,41.48,0,0,0,6.95,1.53c1.28.2,2.57.34,3.85.43s2.58.13,3.85.11h0a20.21,20.21,0,0,0,7.4-1.66,10.51,10.51,0,0,0,4.44-3.7,16,16,0,0,0,2-6.11,33.92,33.92,0,0,0,.25-8.66,17.06,17.06,0,0,0-.54-2.69,9.11,9.11,0,0,0-4.32-5.72c-2.16-1.18-5.09-1.6-8.78-1.18-1.89.52-3.78.87-5.22,1.13l-1.28.25A1.34,1.34,0,0,1,37.84,41a41.24,41.24,0,0,1,6.68-1.42l.23,0c2.83-.75,5.34-1.79,5.09-3.15A4,4,0,0,0,47.9,34,12,12,0,0,0,43,32.31a20.31,20.31,0,0,0-5.64.3,28.07,28.07,0,0,0-6.12,1.88,26,26,0,0,0-5.13,3,32.16,32.16,0,0,0-4.67,4.37,31.42,31.42,0,0,0-2.79,11,28.45,28.45,0,0,0,.16,5.13Zm-.42,8.07c-.81,0-1.72.1-2.66.17-5.32.38-11.66.84-14-3.48C.46,60.59-.19,55.66.05,51.14c.22-4,1.13-7.7,3-9.33a6.72,6.72,0,0,1,2.05-1.25A8.75,8.75,0,0,1,7.38,40l12.4-.21a34.32,34.32,0,0,1,4.74-4.38,28.53,28.53,0,0,1,5.67-3.35A30.41,30.41,0,0,1,36.9,30a22.57,22.57,0,0,1,6.39-.33,15.05,15.05,0,0,1,6.05,2.11,6.43,6.43,0,0,1,3.12,4.12,3.73,3.73,0,0,1-1.63,3.71A13.5,13.5,0,0,1,55,41a11.66,11.66,0,0,1,5.61,7.31,18.64,18.64,0,0,1,.63,3.13c.09.73.14,1.56.17,2.45h0c0-.89.08-1.72.17-2.45a18.64,18.64,0,0,1,.63-3.13A11.63,11.63,0,0,1,67.85,41a13.5,13.5,0,0,1,4.2-1.41,3.73,3.73,0,0,1-1.63-3.71,6.43,6.43,0,0,1,3.12-4.12,15.05,15.05,0,0,1,6-2.11A22.57,22.57,0,0,1,86,30a30.41,30.41,0,0,1,6.71,2.07,28.82,28.82,0,0,1,5.67,3.35,34.32,34.32,0,0,1,4.74,4.38l12.29.2h.11a8.75,8.75,0,0,1,2.32.56,6.84,6.84,0,0,1,2.05,1.25c1.83,1.63,2.74,5.38,3,9.33.24,4.52-.41,9.45-1.65,11.69-2.39,4.32-8.73,3.86-14.05,3.48-.94-.07-1.85-.14-2.66-.17A30.33,30.33,0,0,1,100.82,69l-.07.05a28.7,28.7,0,0,1-6.88,3.36A45.66,45.66,0,0,1,86.48,74c-1.33.2-2.69.35-4.07.44s-2.68.13-4.07.11h-.13a23,23,0,0,1-8.38-1.91A13.13,13.13,0,0,1,64.31,68a18.59,18.59,0,0,1-2.43-7.2A36.72,36.72,0,0,1,61.44,56h0A36.72,36.72,0,0,1,61,60.82,18.59,18.59,0,0,1,58.57,68a13.13,13.13,0,0,1-5.52,4.63,23,23,0,0,1-8.38,1.91h-.13c-1.39,0-2.75,0-4.07-.11s-2.74-.24-4.07-.44A45.66,45.66,0,0,1,29,72.37,28.7,28.7,0,0,1,22.13,69L22.06,69a30.33,30.33,0,0,1-3.65-2.82ZM11.14,41.2,17,41c-3.36,3-4,3.88-4.58,8.19-.17,1.29-.29,2.63-.35,4,.29,2.19-.47,3.34-2.39,3.32l-1,0c-1.36-.32-2.38-1.15-2.23-3.79l.5-4.19c.22-1.88.15-4,1.49-5.46a8.52,8.52,0,0,1,2.74-1.93ZM73,52.27a1.19,1.19,0,0,1,2.3-.63,22.33,22.33,0,0,1,.82,5,17.68,17.68,0,0,1-.45,5A1.19,1.19,0,0,1,73.38,61a15.1,15.1,0,0,0,.4-4.29A20.11,20.11,0,0,0,73,52.27Zm6.44,0a1.19,1.19,0,0,1,2.29-.63,23,23,0,0,1,.83,5,17.33,17.33,0,0,1-.46,5A1.19,1.19,0,1,1,79.82,61a15.09,15.09,0,0,0,.39-4.29,20.69,20.69,0,0,0-.74-4.45Zm-31.92-.63a1.19,1.19,0,0,1,2.3.63,20,20,0,0,0-.75,4.45A15.1,15.1,0,0,0,49.5,61a1.19,1.19,0,1,1-2.32.56,17.68,17.68,0,0,1-.45-5,22.33,22.33,0,0,1,.82-5Zm-6.43,0a1.19,1.19,0,0,1,2.29.63,20.58,20.58,0,0,0-.74,4.45A15.09,15.09,0,0,0,43.06,61a1.2,1.2,0,0,1-.88,1.44,1.19,1.19,0,0,1-1.43-.88,17.33,17.33,0,0,1-.46-5,23,23,0,0,1,.83-5Zm12.45-23.7a1.66,1.66,0,0,1-2.12,2.55L37.23,18.67,53.48,19,50.81,5.21l11.76,7.84L68.88,0l4.41,13.55,13.39-7-4.9,14.09,14,1.32-6.59,7a1.66,1.66,0,0,1-2.42-2.27l2-2.09L77.25,23.51l3.54-10.16-9.45,5L68.28,8.88l-4.38,9-8.32-5.55,1.94,10-10.89-.22,6.94,5.77Zm50.87,14.25a33.56,33.56,0,0,1,2.43,10.61,32.72,32.72,0,0,1-1.27,11l1.7.12c4.63.34,10.15.74,11.79-2.25,1-1.89,1.59-6.28,1.36-10.42-.18-3.39-.86-6.51-2.17-7.67a4.28,4.28,0,0,0-1.33-.82,6.67,6.67,0,0,0-1.68-.4l-1.63,0a6.36,6.36,0,0,1,.84.79c1.34,1.49,1.27,3.58,1.49,5.46l.5,4.19c.15,2.64-.87,3.47-2.23,3.79l-1,0c-1.92,0-2.68-1.13-2.39-3.32-.06-1.39-.18-2.73-.35-4-.47-3.65-1-4.86-3.21-7l-2.86,0Z"></path></svg> มวยไทย</a></li><li class="menu-item menu-item-type-post_type menu-item-object-page current-menu-item page_item page-item-1034 current_page_item menu-item-1040 nav-item -active">
+        
+        <a href="https://warpsport24.online/favorite/" aria-current="page" class="nav-link -active animated fadeInLeftShortly" data-animatable="fadeInLeftShortly" data-delay="150"><span class="badge badge-favorite"></span> <i class="far fa-star mr-1" style="font-size: 1.47rem;"></i> เกมติดตาม</a></li><li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-11061 nav-item">
+        
+        <a href="https://warpsport24.online/sport-other/" class="nav-link animated fadeInLeftShortly" data-animatable="fadeInLeftShortly" data-delay="150"><i class="fas fa-futbol mr-1" style="font-size: 1.47rem;"></i> กีฬาอื่น</a></li><li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-1017 nav-item">
+        
+        <a href="https://warpsport24.online/news/" class="nav-link animated fadeInLeftShortly" data-animatable="fadeInLeftShortly" data-delay="150"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 mr-2" data-v-ebd68cb9=""><path stroke-linecap="round" stroke-linejoin="round" d="M12 7.5h1.5m-1.5 3h1.5m-7.5 3h7.5m-7.5 3h7.5m3-9h3.375c.621 0 1.125.504 1.125 1.125V18a2.25 2.25 0 01-2.25 2.25M16.5 7.5V18a2.25 2.25 0 002.25 2.25M16.5 7.5V4.875c0-.621-.504-1.125-1.125-1.125H4.125C3.504 3.75 3 4.254 3 4.875V18a2.25 2.25 0 002.25 2.25h13.5M6 7.5h3v3H6v-3z" data-v-ebd68cb9=""></path></svg>บทความ</a></li><li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-1016 nav-item">
+        
+        <a href="https://warpsport24.online/highlight/" class="nav-link animated fadeInLeftShortly" data-animatable="fadeInLeftShortly" data-delay="150"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="white" class="w-6 h-6 mr-2" data-v-ebd68cb9=""><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" data-v-ebd68cb9=""></path><path stroke-linecap="round" stroke-linejoin="round" d="M15.91 11.672a.375.375 0 010 .656l-5.603 3.113a.375.375 0 01-.557-.328V8.887c0-.286.307-.466.557-.327l5.603 3.112z" data-v-ebd68cb9=""></path></svg>ไฮไลท์</a></li><li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-1158 nav-item">
+        
+        <a href="https://warpsport24.online/football-results-last-night/" class="nav-link animated fadeInLeftShortly" data-animatable="fadeInLeftShortly" data-delay="150"><i class="fas fa-futbol mr-1" style="font-size: 1.47rem;"></i> ผลบอลเมื่อคืน</a></li><li class="menu-item menu-item-type-custom menu-item-object-custom menu-item-11757 nav-item"><a target="_blank" href="https://movietofree.com" class="nav-link animated fadeInLeftShortly" data-animatable="fadeInLeftShortly" data-delay="150"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z"></path><path d="M8 4l0 16"></path><path d="M16 4l0 16"></path><path d="M4 8l4 0"></path><path d="M4 16l4 0"></path><path d="M4 12l16 0"></path><path d="M16 8l4 0"></path><path d="M16 16l4 0"></path></svg> ดูหนัง</a></li>
+        
+        
+        
+        <li class="menu-item menu-item-type-custom menu-item-object-custom menu-item-21620 nav-item"><a href="https://t.me/djtonor230" target="_blank" class="nav-link animated fadeInLeftShortly" data-animatable="fadeInLeftShortly" data-delay="150"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path fill="rgb(255, 255, 255)" d="M320 72C183 72 72 183 72 320C72 457 183 568 320 568C457 568 568 457 568 320C568 183 457 72 320 72zM435 240.7C431.3 279.9 415.1 375.1 406.9 419C403.4 437.6 396.6 443.8 390 444.4C375.6 445.7 364.7 434.9 350.7 425.7C328.9 411.4 316.5 402.5 295.4 388.5C270.9 372.4 286.8 363.5 300.7 349C304.4 345.2 367.8 287.5 369 282.3C369.2 281.6 369.3 279.2 367.8 277.9C366.3 276.6 364.2 277.1 362.7 277.4C360.5 277.9 325.6 300.9 258.1 346.5C248.2 353.3 239.2 356.6 231.2 356.4C222.3 356.2 205.3 351.4 192.6 347.3C177.1 342.3 164.7 339.6 165.8 331C166.4 326.5 172.5 322 184.2 317.3C256.5 285.8 304.7 265 328.8 255C397.7 226.4 412 221.4 421.3 221.2C423.4 221.2 427.9 221.7 430.9 224.1C432.9 225.8 434.1 228.2 434.4 230.8C434.9 234 435 237.3 434.8 240.6z"></path></svg> ติดต่อเรา</a></li></ul></div></div></div></div></div></div></div>
+        
+        <div class="x-button-footer-actions "><div class="-menu-wrapper"> 
+     
+     <a href="/" class="-btn-item -btn-favorite" target="_self"> <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokewidth="1.5" stroke="red" class="w-6"> <path strokelinecap="round" strokelinejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"></path> </svg> <span class="-typo">หน้าแรก</span> </a> 
+    
+    <a href="/favorite" class="-btn-item -btn-favorite" target="_self"> <span class="badge badge-favorite -mobile"></span> <i class="far fa-star mb-1" style="font-size: 1.45rem;"></i> <span class="-typo">เกมติดตาม</span> </a> 
+    
+    <a href="/highlight" class="-btn-item -btn-hilight" target="_self"> <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="red" class="w-6"> <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path> <path stroke-linecap="round" stroke-linejoin="round" d="M15.91 11.672a.375.375 0 010 .656l-5.603 3.113a.375.375 0 01-.557-.328V8.887c0-.286.307-.466.557-.327l5.603 3.112z"></path> </svg> <span class="-typo">ไฮไลท์บอล</span> </a>
+    
+    <a href="/tv-online" class="-btn-item -btn-category" target="_self"> <svg style="color: var(--accent);" xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-device-tv" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"> <path stroke="none" d="M0 0h24v24H0z" fill="none"></path> <path d="M3 7m0 2a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v9a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2z"></path> <path d="M16 3l-4 4l-4 -4"></path> </svg> <span class="-typo">ดูทีวี</span> </a> 
+
+    <a href="/news" class="-btn-item -btn-category" target="_self"> <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="red" class="w-6"> <path stroke-linecap="round" stroke-linejoin="round" d="M12 7.5h1.5m-1.5 3h1.5m-7.5 3h7.5m-7.5 3h7.5m3-9h3.375c.621 0 1.125.504 1.125 1.125V18a2.25 2.25 0 01-2.25 2.25M16.5 7.5V18a2.25 2.25 0 002.25 2.25M16.5 7.5V4.875c0-.621-.504-1.125-1.125-1.125H4.125C3.504 3.75 3 4.254 3 4.875V18a2.25 2.25 0 002.25 2.25h13.5M6 7.5h3v3H6v-3z"></path> </svg> <span class="-typo">ข่าวสาร</span> </a></div></div><div class="x-modal modal " id="matchModal" tabindex="-1" role="dialog" aria-hidden="true" data-loading-container=".modal-body" data-ajax-modal-always-reload="true" data-ajax-modal="https://warpsport24.online/wp-content/themes/dooball/_ajax_/match.php?_nonce=2c7af4b6c4" data-container="#matchModal"><div class="modal-dialog modal-dialog-centered modal-dialog-scrollable -modal-size -modal-bigger" role="document"><div class="modal-content -modal-content"> <button type="button" class="btn -btn-close -modal " data-dismiss="modal" aria-label="Close"> <i class="fas fa-times"></i> </button><div class="modal-body"><div class="js-modal-content"></div></div></div></div></div> 
+    <script type="speculationrules">{"prefetch":[{"source":"document","where":{"and":[{"href_matches":"/*"},{"not":{"href_matches":["/wp-*.php","/wp-admin/*","/wp-content/uploads/*","/wp-content/*","/wp-content/plugins/*","/wp-content/themes/dooball/*","/*\\?(.+)"]}},{"not":{"selector_matches":"a[rel~=\"nofollow\"]"}},{"not":{"selector_matches":".no-prefetch, .no-prefetch a"}}]},"eagerness":"conservative"}]}</script> <script>document.addEventListener('DOMContentLoaded', function() {
+            var closeButtons = document.querySelectorAll('.dooball-banner-container .close-banner-btn');
+            closeButtons.forEach(function(btn) {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    var container = btn.closest('.dooball-banner-container');
+                    var bannerId = container.getAttribute('data-banner-id');
+
+                    // Hide with transition
+                    container.style.transition = 'opacity 0.25s ease, height 0.25s ease, margin 0.25s ease';
+                    container.style.opacity = '0';
+                    setTimeout(function() {
+                        container.style.height = '0';
+                        container.style.margin = '0';
+                        container.style.padding = '0';
+                        container.style.overflow = 'hidden';
+                        setTimeout(function() {
+                            container.remove();
+                        }, 250);
+                    }, 250);
+
+                    // Adjust page content layout if the closed banner was above the match table
+                    if (container.classList.contains('banner-pos-above_match_table')) {
+                        var primary = document.getElementById('primary');
+                        if (primary) {
+                            primary.style.transition = 'margin-top 0.25s ease';
+                            primary.style.setProperty('margin-top', 'calc(4.5rem + var(--wc-banner-h, 60px))', 'important');
+                        }
+                    }
+
+                    if (bannerId) {
+                        var expiryTime = Date.now() + (24 * 60 * 60 * 1000); // 24 hours
+                        localStorage.setItem('dooball-banner-closed-' + bannerId, '1');
+                        localStorage.setItem('dooball-banner-closed-expiry-' + bannerId, expiryTime.toString());
+                    }
+                });
+            });
+        });</script> <script id="seed-social-js" src="https://warpsport24.online/wp-content/plugins/seed-social/script.js?ver=2021.02"></script> <script id="dooball-runtime-js" src="https://warpsport24.online/wp-content/themes/dooball/js/runtime.js?ver=b56e86bbace845c531f03083ad251be5"></script> <script id="dooball-878-js" src="https://warpsport24.online/wp-content/themes/dooball/js/878.js?ver=b56e86bbace845c531f03083ad251be5"></script> <script id="dooball-782-js" src="https://warpsport24.online/wp-content/themes/dooball/js/782.js?ver=b56e86bbace845c531f03083ad251be5"></script> <script id="dooball-app-js" src="https://warpsport24.online/wp-content/themes/dooball/js/app.js?ver=1.1"></script> <script id="dooball-countdown-js" src="https://warpsport24.online/wp-content/themes/dooball/js/jquery.countdown.min.js?ver=b56e86bbace845c531f03083ad251be5"></script> <script id="dooball-navigation-js" src="https://warpsport24.online/wp-content/themes/dooball/js/navigation.js?ver=1.0.0"></script> <script id="dooball_theme-js-extra">var dooball_obj = {"theme":"https://warpsport24.online/wp-content/themes/dooball","ajaxurl":"https://warpsport24.online/wp-admin/admin-ajax.php","match_nonce":"2c7af4b6c4","leagueKey_nonce":"ebd5e55eec","favorite_nonce":"258c0f7f95","tab_nonce":"62fe1b23f4","refresh_nonce":"09e0692718"};
+//# sourceURL=dooball_theme-js-extra</script> <script id="dooball_theme-js" src="https://warpsport24.online/wp-content/themes/dooball/js/theme.js?ver=1787400602"></script> <script id="wp-emoji-settings" type="application/json">{"baseUrl":"https://s.w.org/images/core/emoji/17.0.2/72x72/","ext":".png","svgUrl":"https://s.w.org/images/core/emoji/17.0.2/svg/","svgExt":".svg","source":{"concatemoji":""}}</script> <script type="module">/*! This file is auto-generated */
+var e="script#wp-emoji-settings",t=document.querySelector(e);if(!(t instanceof HTMLScriptElement))throw new Error("Element missing: "+e);const r=JSON.parse(t.text),s=(window._wpemojiSettings=r,"wpEmojiSettingsSupports"),o=["flag","emoji"];function i(e){try{var t={supportTests:e,timestamp:(new Date).valueOf()};sessionStorage.setItem(s,JSON.stringify(t))}catch(e){}}function c(e,t,n){e.clearRect(0,0,e.canvas.width,e.canvas.height),e.fillText(t,0,0);t=new Uint32Array(e.getImageData(0,0,e.canvas.width,e.canvas.height).data);e.clearRect(0,0,e.canvas.width,e.canvas.height),e.fillText(n,0,0);const r=new Uint32Array(e.getImageData(0,0,e.canvas.width,e.canvas.height).data);return t.every((e,t)=>e===r[t])}function p(e,t){e.clearRect(0,0,e.canvas.width,e.canvas.height),e.fillText(t,0,0);var n=e.getImageData(16,16,1,1);for(let e=0;e<n.data.length;e++)if(0!==n.data[e])return!1;return!0}function u(e,t,n,r){switch(t){case"flag":return n(e,"\ud83c\udff3\ufe0f\u200d\u26a7\ufe0f","\ud83c\udff3\ufe0f\u200b\u26a7\ufe0f")?!1:!n(e,"\ud83c\udde8\ud83c\uddf6","\ud83c\udde8\u200b\ud83c\uddf6")&&!n(e,"\ud83c\udff4\udb40\udc67\udb40\udc62\udb40\udc65\udb40\udc6e\udb40\udc67\udb40\udc7f","\ud83c\udff4\u200b\udb40\udc67\u200b\udb40\udc62\u200b\udb40\udc65\u200b\udb40\udc6e\u200b\udb40\udc67\u200b\udb40\udc7f");case"emoji":return!r(e,"\ud83e\u1fac8")}return!1}function f(e,t,n,r){let a;const s=(a="undefined"!=typeof WorkerGlobalScope&&self instanceof WorkerGlobalScope?new OffscreenCanvas(300,150):document.createElement("canvas")).getContext("2d",{willReadFrequently:!0}),o=(s.textBaseline="top",s.font="600 32px Arial",{});return e.forEach(e=>{o[e]=t(s,e,n,r)}),o}function a(e){var t=document.createElement("script");t.src=e,t.defer=!0,document.head.appendChild(t)}r.supports={everything:!0,everythingExceptFlag:!0},new Promise(t=>{let n=function(){try{var e=JSON.parse(sessionStorage.getItem(s));if("object"==typeof e&&"number"==typeof e.timestamp&&(new Date).valueOf()<e.timestamp+604800&&"object"==typeof e.supportTests)return e.supportTests}catch(e){}return null}();if(!n){if("undefined"!=typeof Worker&&"undefined"!=typeof OffscreenCanvas&&"undefined"!=typeof URL&&URL.createObjectURL&&"undefined"!=typeof Blob)try{var e="postMessage("+f.toString()+"("+[JSON.stringify(o),u.toString(),c.toString(),p.toString()].join(",")+"));",r=new Blob([e],{type:"text/javascript"});const a=new Worker(URL.createObjectURL(r),{name:"wpTestEmojiSupports"});return void(a.onmessage=e=>{i(n=e.data),a.terminate(),t(n)})}catch(e){}i(n=f(o,u,c,p))}t(n)}).then(e=>{for(const n in e)r.supports[n]=e[n],r.supports.everything=r.supports.everything&&r.supports[n],"flag"!==n&&(r.supports.everythingExceptFlag=r.supports.everythingExceptFlag&&r.supports[n]);var t;r.supports.everythingExceptFlag=r.supports.everythingExceptFlag&&!r.supports.flag,r.supports.everything||((t=r.source||{}).concatemoji?a(t.concatemoji):t.wpemoji&&t.twemoji&&(a(t.twemoji),a(t.wpemoji)))});
+//# sourceURL=https://warpsport24.online/wp-includes/js/wp-emoji-loader.min.js</script> <script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon="{&quot;version&quot;:&quot;2024.11.0&quot;,&quot;token&quot;:&quot;9718b4bdb30d4072b99e6123836c1a61&quot;,&quot;r&quot;:1}" crossorigin="anonymous"></script>
+<script>jQuery(document).ready(function($) {
+        setTimeout(function() {
+            $('[data-ajax-favorite]').each(function() {
+                var $this = $(this);
+                var fav_list = JSON.parse(localStorage.getItem('fav_list'));
+                if (fav_list === null || fav_list.length == 0) {
+                    $(".table-ball").html('<div class="text-center my-3 f-5">ยังไม่มีข้อมูลเกมติดตาม</div>');
+                } else {
+                    var $contentElement = $('.table-ball');
+                    fav_list = fav_list.join(",");
+                    $.ajax({
+                        type: 'POST',
+                        cache: false,
+                        url: $this.data('ajax-favorite'),
+                        data: {
+                            _nonce: dooball_obj.favorite_nonce,
+                            fav_list: fav_list,
+                        },
+                        success: function(response) {
+                            var $response = $(response);
+                            $contentElement.html($response);
+                            $(document).trigger('dom-node-inserted', [$response]);
+                        },
+                        error: _ajax_error_handler(), // Assuming _ajax_error_handler is a defined function.
+                    });
+                }
+            });
+        }, 0);
+    })</script>
+    
+   
+    
+    <script async="" type="text/javascript" src=""></script>
+    </body>
